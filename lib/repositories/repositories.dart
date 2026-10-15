@@ -1,0 +1,12 @@
+export 'assessment_repository.dart';
+export 'auth_repository.dart';
+export 'quiz_repository.dart';
+export 'remedial_repository.dart';
+export 'school_repository.dart';
+export 'student_repository.dart';
+export 'mock/mock_assessment_repository.dart';
+export 'mock/mock_auth_repository.dart';
+export 'mock/mock_quiz_repository.dart';
+export 'mock/mock_remedial_repository.dart';
+export 'mock/mock_school_repository.dart';
+export 'mock/mock_student_repository.dart';
