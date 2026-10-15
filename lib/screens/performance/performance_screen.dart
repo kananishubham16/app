@@ -771,6 +771,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
 
   Widget _buildCategorizedGroups(StudentPerformanceSummary summary) {
     final theme = Theme.of(context);
+    final isGu = Localizations.localeOf(context).languageCode == 'gu';
 
     final weakSubjects = summary.subjectPerformances
         .where((s) => s.level == PerformanceLevel.weak)
@@ -786,51 +787,95 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          Localizations.localeOf(context).languageCode == 'gu' ? 'વિષય વર્ગીકરણ' : 'Subject Categorization',
+          isGu ? 'વિષય વર્ગીકરણ' : 'Subject Categorization',
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            // Weak
-            Expanded(
-              child: _buildCategoryBox(
-                title: Localizations.localeOf(context).languageCode == 'gu' ? 'સહાયની જરૂર' : 'Needs Support',
-                count: weakSubjects.length,
-                color: Colors.red.shade700,
-                bgColor: Colors.red.shade50,
-                names: weakSubjects.map((s) => s.subjectName).toList(),
-              ),
-            ),
-            const SizedBox(width: 8),
-            // Average
-            Expanded(
-              child: _buildCategoryBox(
-                title: Localizations.localeOf(context).languageCode == 'gu' ? 'વિકાસશીલ' : 'Developing',
-                count: avgSubjects.length,
-                color: Colors.amber.shade800,
-                bgColor: Colors.amber.shade50,
-                names: avgSubjects.map((s) => s.subjectName).toList(),
-              ),
-            ),
-            const SizedBox(width: 8),
-            // Strong
-            Expanded(
-              child: _buildCategoryBox(
-                title: Localizations.localeOf(context).languageCode == 'gu' ? 'નિપુણ' : 'Proficient',
-                count: strongSubjects.length,
-                color: Colors.green.shade700,
-                bgColor: Colors.green.shade50,
-                names: strongSubjects.map((s) => s.subjectName).toList(),
-              ),
-            ),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            // When screen is very narrow (< 380dp), render 1 column or responsive 3-column with small padding
+            final itemWidth = (constraints.maxWidth - 16) / 3;
+            if (itemWidth < 98) {
+              // Stack vertically or 2+1 on compact mobile viewports to prevent 4.7px right overflow
+              return Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildCategoryBox(
+                          title: isGu ? 'સહાયની જરૂર' : 'Needs Support',
+                          count: weakSubjects.length,
+                          color: Colors.red.shade700,
+                          bgColor: Colors.red.shade50,
+                          names: weakSubjects.map((s) => s.subjectName).toList(),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _buildCategoryBox(
+                          title: isGu ? 'વિકાસશીલ' : 'Developing',
+                          count: avgSubjects.length,
+                          color: Colors.amber.shade800,
+                          bgColor: Colors.amber.shade50,
+                          names: avgSubjects.map((s) => s.subjectName).toList(),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  _buildCategoryBox(
+                    title: isGu ? 'નિપુણ' : 'Proficient',
+                    count: strongSubjects.length,
+                    color: Colors.green.shade700,
+                    bgColor: Colors.green.shade50,
+                    names: strongSubjects.map((s) => s.subjectName).toList(),
+                  ),
+                ],
+              );
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _buildCategoryBox(
+                    title: isGu ? 'સહાયની જરૂર' : 'Needs Support',
+                    count: weakSubjects.length,
+                    color: Colors.red.shade700,
+                    bgColor: Colors.red.shade50,
+                    names: weakSubjects.map((s) => s.subjectName).toList(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildCategoryBox(
+                    title: isGu ? 'વિકાસશીલ' : 'Developing',
+                    count: avgSubjects.length,
+                    color: Colors.amber.shade800,
+                    bgColor: Colors.amber.shade50,
+                    names: avgSubjects.map((s) => s.subjectName).toList(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildCategoryBox(
+                    title: isGu ? 'નિપુણ' : 'Proficient',
+                    count: strongSubjects.length,
+                    color: Colors.green.shade700,
+                    bgColor: Colors.green.shade50,
+                    names: strongSubjects.map((s) => s.subjectName).toList(),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ],
     );
   }
+
 
   Widget _buildCategoryBox({
     required String title,
@@ -839,8 +884,10 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
     required Color bgColor,
     required List<String> names,
   }) {
+    final isGu = Localizations.localeOf(context).languageCode == 'gu';
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(12),
@@ -852,14 +899,19 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: color,
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 4),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                 decoration: BoxDecoration(
@@ -880,8 +932,8 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
           const SizedBox(height: 8),
           if (names.isEmpty)
             Text(
-              Localizations.localeOf(context).languageCode == 'gu' ? 'કંઈ નહીં' : 'None',
-              style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+              isGu ? 'કંઈ નહીં' : 'None',
+              style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
             )
           else
             ...names.map(
@@ -900,6 +952,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
       ),
     );
   }
+
 
   Widget _buildTopicLearningGaps(
     StudentPerformanceSummary summary,
@@ -999,10 +1052,12 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                       Builder(
                         builder: (ctx) {
                           final userRole = ctx.watch<AuthProvider>().currentUser?.role;
-                          final isObserver = userRole == UserRole.principal || userRole == UserRole.brc;
+                          final isTeacher = userRole == UserRole.teacher;
                           final l10n = AppLocalizations.of(ctx);
 
-                          if (isObserver) {
+                          // Only teachers can supervise or assign quizzes
+                          // Parents, Principals, and BRC view diagnostic gap badge
+                          if (!isTeacher) {
                             return Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
@@ -1033,9 +1088,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                             label: FittedBox(
                               fit: BoxFit.scaleDown,
                               child: Text(
-                                userRole == UserRole.parent
-                                    ? (l10n?.startHomeQuiz ?? 'Start Home Quiz')
-                                    : (l10n?.superviseQuiz ?? 'Supervise Quiz'),
+                                l10n?.superviseQuiz ?? 'Supervise Quiz',
                                 style: const TextStyle(fontSize: 12),
                               ),
                             ),
@@ -1061,6 +1114,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                           );
                         },
                       ),
+
                     ],
                   ),
                 );

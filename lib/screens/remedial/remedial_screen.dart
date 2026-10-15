@@ -756,20 +756,18 @@ class _RemedialScreenState extends State<RemedialScreen> {
             ],
 
             // Action Buttons
-            if ((action.hasQuiz && (isTeacher || isParent)) || isTeacher) ...[
+            if ((action.hasQuiz && isTeacher) || isTeacher) ...[
               const SizedBox(height: 14),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  if (action.hasQuiz && (isTeacher || isParent))
+                  if (action.hasQuiz && isTeacher)
                     ElevatedButton.icon(
                       icon: const Icon(Icons.play_circle_fill_rounded, size: 18),
                       label: Text(
-                        isParent
-                            ? (AppLocalizations.of(context)?.startHomeQuiz ?? 'Start Home Quiz')
-                            : (AppLocalizations.of(context)?.superviseQuiz ?? 'Supervise Quiz'),
+                        AppLocalizations.of(context)?.superviseQuiz ?? 'Supervise Quiz',
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.purple.shade700,
@@ -803,6 +801,7 @@ class _RemedialScreenState extends State<RemedialScreen> {
                 ],
               ),
             ],
+
           ],
         ),
       ),

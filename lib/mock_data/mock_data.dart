@@ -155,7 +155,7 @@ class MockData {
       role: UserRole.teacher,
       schoolId: 'school_1',
       classIds: ['class_3a_s1', 'class_4a_s1'],
-      subjectIds: ['subject_math', 'subject_english'],
+      subjectIds: ['subject_math', 'subject_eng'],
       avatarInitials: 'AS',
     ),
     const UserModel(

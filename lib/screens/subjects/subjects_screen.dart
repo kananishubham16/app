@@ -532,55 +532,37 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
               ),
             ),
             if (uniqueStudents.isNotEmpty)
-              DropdownButtonHideUnderline(
-                child: DropdownButton<String?>(
-                  value: hasSelected ? selected?.id : null,
-                  isDense: true,
-                  icon: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Icon(
-                      Icons.swap_horiz_rounded,
-                      color: AppColors.primary,
-                      size: 20,
-                    ),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  minimumSize: const Size(0, 36),
+                  side: BorderSide(color: AppColors.primary.withOpacity(0.4)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  selectedItemBuilder: (BuildContext context) {
-                    return [
-                      const SizedBox.shrink(),
-                      ...uniqueStudents.map((s) => const SizedBox.shrink()),
-                    ];
-                  },
-                  items: [
-                    DropdownMenuItem<String?>(
-                      value: null,
-                      child: Text(l10n?.curriculumOverview ?? 'Curriculum Overview'),
-                    ),
-                    ...uniqueStudents.map(
-                      (s) => DropdownMenuItem<String?>(
-                        value: s.id,
-                        child: Text(s.name),
-                      ),
-                    ),
-                  ],
-                  onChanged: (String? newId) {
-                    if (newId == null) {
-                      studentProv.selectStudent(null);
-                      context.read<PerformanceProvider>().clear();
-                    } else {
-                      final chosen = uniqueStudents.firstWhere(
-                        (s) => s.id == newId,
-                      );
-                      studentProv.selectStudent(chosen);
-                      context.read<PerformanceProvider>().loadPerformance(
-                        chosen.id,
-                      );
-                    }
-                  },
                 ),
+                icon: const Icon(
+                  Icons.swap_horiz_rounded,
+                  color: AppColors.primary,
+                  size: 18,
+                ),
+                label: Text(
+                  Localizations.localeOf(context).languageCode == 'gu' ? 'બદલો' : 'Change',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+                onPressed: () {
+                  _showStudentSelectionBottomSheet(
+                    context,
+                    uniqueStudents,
+                    selected,
+                    studentProv,
+                    l10n,
+                  );
+                },
               ),
           ],
         ),
@@ -588,7 +570,132 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
     );
   }
 
+
+  void _showStudentSelectionBottomSheet(
+    BuildContext context,
+    List<StudentModel> students,
+    StudentModel? currentSelected,
+    StudentProvider studentProv,
+    AppLocalizations? l10n,
+  ) {
+    final isGu = Localizations.localeOf(context).languageCode == 'gu';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        isGu ? 'વિદ્યાર્થી પસંદ કરો' : 'Select Student',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: AppColors.primaryContainer,
+                    child: Icon(Icons.menu_book_rounded, color: AppColors.primary, size: 20),
+                  ),
+                  title: Text(
+                    l10n?.curriculumOverview ?? (isGu ? 'અભ્યાસક્રમ સામાન્ય દૃશ્ય' : 'General Curriculum Overview'),
+                    style: TextStyle(
+                      fontWeight: currentSelected == null ? FontWeight.bold : FontWeight.w500,
+                      color: currentSelected == null ? AppColors.primary : AppColors.textPrimary,
+                    ),
+                  ),
+                  subtitle: Text(
+                    isGu ? 'કોઈ ચોક્કસ વિદ્યાર્થી પસંદ કરેલ નથી' : 'No specific student filtered',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  trailing: currentSelected == null
+                      ? const Icon(Icons.check_circle_rounded, color: AppColors.primary)
+                      : null,
+                  onTap: () {
+                    studentProv.selectStudent(null);
+                    context.read<PerformanceProvider>().clear();
+                    Navigator.pop(ctx);
+                  },
+                ),
+                const Divider(height: 1),
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: students.length,
+                    separatorBuilder: (_, _) => const Divider(height: 1),
+                    itemBuilder: (_, index) {
+
+                      final s = students[index];
+                      final isSelected = currentSelected?.id == s.id;
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: isSelected
+                              ? AppColors.primary.withOpacity(0.15)
+                              : Colors.grey.shade100,
+                          child: Text(
+                            s.name.substring(0, 1).toUpperCase(),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                        title: Text(
+                          s.name,
+                          style: TextStyle(
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                          ),
+                        ),
+                        subtitle: Text(
+                          '${s.className} • ID: ${s.studentId}',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        trailing: isSelected
+                            ? const Icon(Icons.check_circle_rounded, color: AppColors.primary)
+                            : null,
+                        onTap: () {
+                          studentProv.selectStudent(s);
+                          context.read<PerformanceProvider>().loadPerformance(s.id);
+                          Navigator.pop(ctx);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildSubjectCard({
+
     required BuildContext context,
     required SubjectModel subject,
     required SubjectPerformance? performance,

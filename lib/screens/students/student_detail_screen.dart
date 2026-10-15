@@ -376,12 +376,12 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              l10n?.remedialObservation ??
-                  (isGu
-                      ? 'ઉપચારાત્મક ક્વિઝ શિક્ષકો દ્વારા વર્ગમાં અથવા વાલીઓ દ્વારા ઘરે લેવામાં આવે છે.'
-                      : 'Remedial quizzes are conducted by teachers in class or parents at home.'),
+              isGu
+                  ? 'ઉપચારાત્મક ક્વિઝ શિક્ષકો દ્વારા વિદ્યાર્થીઓની અધ્યયન ક્ષતિઓ સુધારવા માટે વર્ગમાં લેવામાં આવે છે.'
+                  : 'Targeted quizzes are conducted exclusively by teachers to verify remedial progress.',
               style: TextStyle(color: Colors.blue.shade900, fontSize: 12),
             ),
+
             const SizedBox(height: 10),
             Row(
               children: [

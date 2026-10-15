@@ -1228,20 +1228,28 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                       spacing: 8,
                       runSpacing: 6,
                       children: subject.topics.map((t) {
-                        return Chip(
-                          label: Text(
-                            t.name,
-                            style: const TextStyle(fontSize: 11),
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
                           ),
-                          padding: EdgeInsets.zero,
-                          visualDensity: VisualDensity.compact,
-                          backgroundColor: Theme.of(context)
-                              .colorScheme
-                              .surfaceVariant
-                              .withOpacity(0.4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFFCBD5E1)),
+                          ),
+                          child: Text(
+                            t.name,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
                         );
                       }).toList(),
                     ),
+
                     const Divider(height: 24),
                     Wrap(
                       alignment: WrapAlignment.end,

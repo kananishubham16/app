@@ -18,8 +18,8 @@ import 'package:learning_setu/widgets/loading_widget.dart';
 import 'package:learning_setu/widgets/empty_state_widget.dart';
 import 'package:learning_setu/widgets/percentage_bar.dart';
 import 'package:learning_setu/l10n/app_localizations.dart';
-import 'package:learning_setu/app/app_router.dart';
 import 'package:learning_setu/app/theme.dart';
+
 
 class ParentDashboard extends StatefulWidget {
   const ParentDashboard({super.key});
@@ -582,31 +582,40 @@ class _ParentDashboardState extends State<ParentDashboard> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     if (remedial.hasQuiz) ...[
-                      FilledButton.icon(
-                        onPressed: () {
-                          Navigator.pushNamed(
-                            context,
-                            AppRouter.quiz,
-                            arguments: {
-                              'studentId': remedial.studentId,
-                              'subjectId': remedial.subjectId,
-                              'topicId': remedial.topicId,
-                              'topicName': remedial.topicName,
-                              'classId': currentChild?.classId ?? 'class_3',
-                              'remedialActionId': remedial.id,
-                            },
-                          );
-                        },
-                        icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                        label: Text(Localizations.localeOf(context).languageCode == 'gu' ? 'ક્વિઝ શરૂ કરો' : 'Start Quiz'),
-                        style: FilledButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.purple.shade50,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Colors.purple.shade200),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.quiz_outlined,
+                              size: 14,
+                              color: Colors.purple.shade700,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              Localizations.localeOf(context).languageCode == 'gu'
+                                  ? 'ક્વિઝ શિક્ષક દ્વારા લેવાશે'
+                                  : 'Quiz Supervised by Teacher',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.purple.shade700,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ] else ...[
+
                       OutlinedButton.icon(
                         onPressed: () async {
                           final messenger = ScaffoldMessenger.of(context);
