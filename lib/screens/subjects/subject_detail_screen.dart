@@ -739,8 +739,10 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
     List<RemedialAction> remedials,
   ) {
     final theme = Theme.of(context);
+    final user = context.watch<AuthProvider>().currentUser;
 
     return Column(
+
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
@@ -755,20 +757,23 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(width: 8),
-            TextButton.icon(
-              icon: const Icon(Icons.add, size: 16),
-              label: Text(Localizations.localeOf(context).languageCode == 'gu' ? 'સોંપો' : 'Assign'),
-              onPressed: () {
-                Navigator.pushNamed(
-                  context,
-                  AppRouter.assignRemedial,
-                  arguments: {'studentId': student.id, 'subjectId': subject.id},
-                ).then((_) => _loadData());
-              },
-            ),
+            if (user?.role == UserRole.teacher) ...[
+              const SizedBox(width: 8),
+              TextButton.icon(
+                icon: const Icon(Icons.add, size: 16),
+                label: Text(Localizations.localeOf(context).languageCode == 'gu' ? 'સોંપો' : 'Assign'),
+                onPressed: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRouter.assignRemedial,
+                    arguments: {'studentId': student.id, 'subjectId': subject.id},
+                  ).then((_) => _loadData());
+                },
+              ),
+            ],
           ],
         ),
+
         const SizedBox(height: 6),
         if (remedials.isEmpty)
           Card(

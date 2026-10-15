@@ -442,61 +442,6 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
           const SizedBox(height: 10),
           SizedBox(
             width: double.infinity,
-            child: FilledButton.tonalIcon(
-              icon: const Icon(Icons.quiz_rounded, size: 18),
-              label: Text(
-                firstWeakTopic != null
-                    ? '${l10n?.startHomeQuiz ?? (isGu ? "ઘરે ક્વિઝ શરૂ કરો" : "Start Home Quiz")}: ${firstWeakTopic.topicName}'
-                    : (l10n?.startHomeQuiz ?? (isGu ? 'ઘરે ક્વિઝ શરૂ કરો' : 'Start Home Quiz')),
-                overflow: TextOverflow.ellipsis,
-              ),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(double.infinity, 48),
-                backgroundColor: firstWeakTopic != null
-                    ? Colors.red.shade50
-                    : AppColors.surfaceVariant,
-                foregroundColor: firstWeakTopic != null
-                    ? Colors.red.shade800
-                    : AppColors.textPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(
-                    color: firstWeakTopic != null
-                        ? Colors.red.shade200
-                        : AppColors.dividerColor,
-                  ),
-                ),
-              ),
-              onPressed: () {
-                final defaultSubject =
-                    subjects.isNotEmpty ? subjects.first : null;
-                final defaultTopic =
-                    defaultSubject != null && defaultSubject.topics.isNotEmpty
-                        ? defaultSubject.topics.first
-                        : null;
-
-                Navigator.pushNamed(
-                  context,
-                  AppRouter.quiz,
-                  arguments: {
-                    'studentId': student.id,
-                    'classId': student.classId,
-                    'subjectId':
-                        weakSubjectId ?? defaultSubject?.id ?? 'subject_math',
-                    'topicId': firstWeakTopic?.topicId ??
-                        defaultTopic?.id ??
-                        'topic_math_add',
-                    'topicName': firstWeakTopic?.topicName ??
-                        defaultTopic?.name ??
-                        'Addition',
-                  },
-                ).then((_) => _loadData());
-              },
-            ),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
             child: OutlinedButton.icon(
               icon: const Icon(Icons.assignment_return_outlined, size: 18),
               label: Text(
@@ -513,6 +458,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
         ],
       );
     }
+
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -1264,8 +1264,10 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
     StudentModel? student,
   ) {
     final theme = Theme.of(context);
+    final user = context.watch<AuthProvider>().currentUser;
 
     return Card(
+
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -1307,31 +1309,34 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                 ),
               );
             }),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.handyman_rounded, size: 18),
-                label: Text(Localizations.localeOf(context).languageCode == 'gu' ? 'ઉપચારાત્મક પ્રેક્ટિસ સોંપો' : 'Assign Remedial Practice'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.secondary,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 46),
+            if (user?.role == UserRole.teacher) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.handyman_rounded, size: 18),
+                  label: Text(Localizations.localeOf(context).languageCode == 'gu' ? 'ઉપચારાત્મક પ્રેક્ટિસ સોંપો' : 'Assign Remedial Practice'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.secondary,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 46),
+                  ),
+                  onPressed: () {
+                    Navigator.pushNamed(
+                      context,
+                      AppRouter.assignRemedial,
+                      arguments: {'studentId': student?.id},
+                    ).then((_) => _loadData());
+                  },
                 ),
-                onPressed: () {
-                  Navigator.pushNamed(
-                    context,
-                    AppRouter.assignRemedial,
-                    arguments: {'studentId': student?.id},
-                  ).then((_) => _loadData());
-                },
               ),
-            ),
+            ],
           ],
         ),
       ),
     );
   }
+
 
   // ==========================================
   // BRC INSTITUTIONAL SCHOOL PERFORMANCE VIEW

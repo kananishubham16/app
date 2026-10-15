@@ -284,6 +284,45 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
     final isGu = Localizations.localeOf(context).languageCode == 'gu';
     final l10n = AppLocalizations.of(context);
 
+    if (!isTeacher) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            l10n?.assignRemedial ?? (isGu ? 'ઉપચારાત્મક કાર્ય સોંપો' : 'Assign Remedial Action'),
+          ),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.gpp_bad_rounded, size: 64, color: Colors.orange.shade700),
+                const SizedBox(height: 16),
+                Text(
+                  isGu ? 'અનધિકૃત ઍક્સેસ' : 'Unauthorized Access',
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  isGu
+                      ? 'માત્ર શિક્ષકો જ વિદ્યાર્થીઓ માટે ઉપચારાત્મક કાર્યો સોંપી શકે છે.'
+                      : 'Only teachers have permission to assign remedial actions to students.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(isGu ? 'પાછા જાઓ' : 'Go Back'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -291,6 +330,7 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
               (isGu ? 'ઉપચારાત્મક કાર્ય સોંપો' : 'Assign Remedial Action'),
         ),
       ),
+
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
