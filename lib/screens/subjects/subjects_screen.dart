@@ -198,14 +198,19 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          selectedStudent != null
-                              ? (l10n?.classPerformanceOverview ?? 'Performance by Subject')
-                              : (l10n?.curriculumSubjects ?? 'Curriculum Subjects'),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Text(
+                            selectedStudent != null
+                                ? (l10n?.classPerformanceOverview ?? 'Performance by Subject')
+                                : (l10n?.curriculumSubjects ?? 'Curriculum Subjects'),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        const SizedBox(width: 8),
                         Text(
                           '${subjects.length} ${l10n?.subjects ?? "Subjects"}',
                           style: theme.textTheme.bodySmall?.copyWith(
@@ -220,14 +225,34 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final isWide = constraints.maxWidth > 600;
+                        if (!isWide) {
+                          return Column(
+                            children: subjects.map((subject) {
+                              final SubjectPerformance? subjectPerf = summary
+                                  ?.subjectPerformances
+                                  .where((sp) => sp.subjectId == subject.id)
+                                  .firstOrNull;
+
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12.0),
+                                child: _buildSubjectCard(
+                                  context: context,
+                                  subject: subject,
+                                  performance: subjectPerf,
+                                  selectedStudent: selectedStudent,
+                                ),
+                              );
+                            }).toList(),
+                          );
+                        }
                         return GridView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: subjects.length,
                           gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: isWide ? 2 : 1,
-                                childAspectRatio: isWide ? 1.55 : 1.7,
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                childAspectRatio: 1.55,
                                 crossAxisSpacing: 12,
                                 mainAxisSpacing: 12,
                               ),
@@ -510,10 +535,25 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
               DropdownButtonHideUnderline(
                 child: DropdownButton<String?>(
                   value: hasSelected ? selected?.id : null,
-                  icon: const Icon(
-                    Icons.swap_horiz_rounded,
-                    color: AppColors.primary,
+                  isDense: true,
+                  icon: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Icon(
+                      Icons.swap_horiz_rounded,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
                   ),
+                  selectedItemBuilder: (BuildContext context) {
+                    return [
+                      const SizedBox.shrink(),
+                      ...uniqueStudents.map((s) => const SizedBox.shrink()),
+                    ];
+                  },
                   items: [
                     DropdownMenuItem<String?>(
                       value: null,
@@ -591,7 +631,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -629,11 +669,18 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(width: 8),
                   if (hasStudent)
-                    PerformanceIndicator(
-                      level: level,
-                      percentage: score,
-                      size: 11,
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: PerformanceIndicator(
+                          level: level,
+                          percentage: score,
+                          size: 11,
+                        ),
+                      ),
                     )
                   else
                     const Icon(
@@ -642,6 +689,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                     ),
                 ],
               ),
+              const SizedBox(height: 10),
               Text(
                 subject.description,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -651,6 +699,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
+              const SizedBox(height: 10),
               if (hasStudent && score != null) ...[
                 PercentageBar(
                   label: Localizations.localeOf(context).languageCode == 'gu' ? 'તાજેતરનું મૂલ્યાંકન' : 'Latest Assessment',
@@ -677,11 +726,14 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                         color: AppColors.textSecondary,
                       ),
                       const SizedBox(width: 4),
-                      Text(
-                        Localizations.localeOf(context).languageCode == 'gu' ? 'આ વિદ્યાર્થી માટે હજુ મૂલ્યાંકન થયું નથી' : 'Not assessed yet for this student',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontSize: 11,
-                          color: AppColors.textSecondary,
+                      Flexible(
+                        child: Text(
+                          Localizations.localeOf(context).languageCode == 'gu' ? 'આ વિદ્યાર્થી માટે હજુ મૂલ્યાંકન થયું નથી' : 'Not assessed yet for this student',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -690,12 +742,15 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
               ] else ...[
                 Row(
                   children: [
-                    Text(
-                      Localizations.localeOf(context).languageCode == 'gu' ? 'અભ્યાસક્રમ અને ઉદ્દેશ્યો જોવા ટેપ કરો' : 'Tap to view curriculum & objectives',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.primary,
+                    Expanded(
+                      child: Text(
+                        Localizations.localeOf(context).languageCode == 'gu' ? 'અભ્યાસક્રમ અને ઉદ્દેશ્યો જોવા ટેપ કરો' : 'Tap to view curriculum & objectives',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.primary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 4),

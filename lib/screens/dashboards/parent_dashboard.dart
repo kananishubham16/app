@@ -220,30 +220,39 @@ class _ParentDashboardState extends State<ParentDashboard> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    Localizations.localeOf(context).languageCode == 'gu' ? 'બાળક પસંદ કરો:' : 'Select Child:',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: 13,
+                  Flexible(
+                    child: Text(
+                      Localizations.localeOf(context).languageCode == 'gu' ? 'બાળક પસંદ કરો:' : 'Select Child:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 13,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  DropdownButton<StudentModel>(
-                    value: children.any((c) => c.id == currentChild.id)
-                        ? children.firstWhere((c) => c.id == currentChild.id)
-                        : null,
-                    isDense: true,
-                    underline: const SizedBox(),
-                    items: children.map((c) {
-                      return DropdownMenuItem<StudentModel>(
-                        value: c,
-                        child: Text(
-                          c.name,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: _onChildChanged,
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<StudentModel>(
+                        value: children.any((c) => c.id == currentChild.id)
+                            ? children.firstWhere((c) => c.id == currentChild.id)
+                            : null,
+                        isDense: true,
+                        isExpanded: true,
+                        items: children.map((c) {
+                          return DropdownMenuItem<StudentModel>(
+                            value: c,
+                            child: Text(
+                              c.name,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: _onChildChanged,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -519,24 +528,29 @@ class _ParentDashboardState extends State<ParentDashboard> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.tertiary.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        remedial.topicName,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.tertiary,
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.tertiary.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          remedial.topicName,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.tertiary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
+                    const SizedBox(width: 8),
                     Text(
                       '${Localizations.localeOf(context).languageCode == 'gu' ? "મુદત" : "Due"} ${dateFormat.format(remedial.dueDate)}',
                       style: const TextStyle(fontSize: 12, color: Colors.grey),
@@ -595,19 +609,19 @@ class _ParentDashboardState extends State<ParentDashboard> {
                     ] else ...[
                       OutlinedButton.icon(
                         onPressed: () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          final isGu = Localizations.localeOf(context).languageCode == 'gu';
                           await context.read<RemedialProvider>().updateStatus(
                             remedial.id,
                             RemedialStatus.completed,
                           );
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  Localizations.localeOf(context).languageCode == 'gu' ? 'ખૂબ સરસ! પ્રવૃત્તિ પૂર્ણ તરીકે નોંધાઈ.' : 'Great job! Practice marked completed.',
-                                ),
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isGu ? 'ખૂબ સરસ! પ્રવૃત્તિ પૂર્ણ તરીકે નોંધાઈ.' : 'Great job! Practice marked completed.',
                               ),
-                            );
-                          }
+                            ),
+                          );
                         },
                         icon: const Icon(Icons.check, size: 16),
                         label: Text(Localizations.localeOf(context).languageCode == 'gu' ? 'પૂર્ણ થયું' : 'Mark Done'),
@@ -657,7 +671,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: assessments.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
+        separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) {
           final item = assessments[index];
           final level = PerformanceClassification.classify(item.percentage);
@@ -878,11 +892,14 @@ class _ParentDashboardState extends State<ParentDashboard> {
                   children: [
                     Icon(Icons.home_outlined, color: AppColors.secondary),
                     const SizedBox(width: 8),
-                    Text(
-                      Localizations.localeOf(context).languageCode == 'gu' ? 'ઘરે મદદ કરવાના ઉપાયો' : 'Ways to Support at Home',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.secondary,
+                    Expanded(
+                      child: Text(
+                        Localizations.localeOf(context).languageCode == 'gu' ? 'ઘરે મદદ કરવાના ઉપાયો' : 'Ways to Support at Home',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.secondary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

@@ -406,7 +406,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: filteredStudents.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final student = filteredStudents[index];
                 final studentAssessments = teacherAssessments.where(
@@ -540,7 +540,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
               itemCount: displayedSubjects.length,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: isWide ? 4 : 2,
-                childAspectRatio: isWide ? 1.4 : 1.15,
+                childAspectRatio: isWide ? 1.4 : (constraints.maxWidth < 360 ? 0.95 : 1.1),
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
               ),
@@ -625,24 +625,29 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.weakColor.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  '$weakCount ${l10n?.needSupport ?? "need support"}',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: AppColors.weakColor,
-                                    fontWeight: FontWeight.bold,
+                              Flexible(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.weakColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    '$weakCount ${l10n?.needSupport ?? "need support"}',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: AppColors.weakColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ),
+                              const SizedBox(width: 4),
                               Icon(
                                 Icons.arrow_forward_ios_rounded,
                                 size: 12,
@@ -740,12 +745,15 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
               color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(width: 12),
-            Text(
-              '${l10n?.selectedClass ?? "Selected Class"}:',
-              style: Theme.of(context).textTheme.titleSmall
-                  ?.copyWith(fontWeight: FontWeight.bold),
+            Flexible(
+              child: Text(
+                '${l10n?.selectedClass ?? "Selected Class"}:',
+                style: Theme.of(context).textTheme.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
             Expanded(
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<ClassModel>(
@@ -790,7 +798,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 10,
           crossAxisSpacing: 10,
-          childAspectRatio: constraints.maxWidth > 600 ? 1.4 : 1.15,
+          childAspectRatio: constraints.maxWidth > 600 ? 1.4 : (constraints.maxWidth < 360 ? 0.95 : 1.1),
           children: [
             StatCard(
               title: l10n?.studentsInClass ?? 'Students in Class',
@@ -986,7 +994,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: assessments.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
+        separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) {
           final item = assessments[index];
           final student = students.cast<StudentModel?>().firstWhere(
@@ -1070,15 +1078,16 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
           children: [
-            Expanded(
-              child: SectionHeader(
-                title:
-                    '${l10n?.curriculumSubjects ?? "Curriculum Subjects"} (${displayedSubjects.length})',
-                subtitle: Localizations.localeOf(context).languageCode == 'gu' ? 'વિષય નિદાન અને અધ્યયન મુદ્દાઓ જુઓ' : 'Browse subject diagnostics and learning topics',
-              ),
+            SectionHeader(
+              title:
+                  '${l10n?.curriculumSubjects ?? "Curriculum Subjects"} (${displayedSubjects.length})',
+              subtitle: Localizations.localeOf(context).languageCode == 'gu' ? 'વિષય નિદાન અને અધ્યયન મુદ્દાઓ જુઓ' : 'Browse subject diagnostics and learning topics',
             ),
             ElevatedButton.icon(
               onPressed: () {
@@ -1130,7 +1139,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: displayedSubjects.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final subject = displayedSubjects[index];
             final avgScore = _getSubjectClassAverage(subject.id, assessments);
@@ -1227,8 +1236,10 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                       }).toList(),
                     ),
                     const Divider(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                    Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
                         TextButton.icon(
                           onPressed: () =>
@@ -1236,7 +1247,6 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                           icon: const Icon(Icons.list_alt, size: 16),
                           label: const Text('Objectives'),
                         ),
-                        const SizedBox(width: 8),
                         FilledButton.icon(
                           onPressed: () => _navigateToSubject(subject),
                           icon: const Icon(Icons.analytics_outlined, size: 16),
@@ -1490,11 +1500,14 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                   children: [
                     Icon(Icons.flag_outlined, color: AppColors.weakColor),
                     const SizedBox(width: 8),
-                    Text(
-                      Localizations.localeOf(context).languageCode == 'gu' ? 'ઓળખાયેલી સામાન્ય અધ્યયન ક્ષતિઓ' : 'Identified Common Learning Gaps',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.weakColor,
+                    Expanded(
+                      child: Text(
+                        Localizations.localeOf(context).languageCode == 'gu' ? 'ઓળખાયેલી સામાન્ય અધ્યયન ક્ષતિઓ' : 'Identified Common Learning Gaps',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.weakColor,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

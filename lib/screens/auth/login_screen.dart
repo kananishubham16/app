@@ -459,14 +459,16 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: themeColor,
                         ),
                         const SizedBox(width: 6),
-                        Text(
-                          isGu
-                              ? 'શિક્ષક પ્રોફાઇલ પસંદ કરો (વિષય અનુસાર):'
-                              : 'Select Teacher Profile (By Subject):',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF334155),
+                        Expanded(
+                          child: Text(
+                            isGu
+                                ? 'શિક્ષક પ્રોફાઇલ પસંદ કરો (વિષય અનુસાર):'
+                                : 'Select Teacher Profile (By Subject):',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF334155),
+                            ),
                           ),
                         ),
                       ],
@@ -769,14 +771,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           Icon(Icons.bolt_rounded, size: 20, color: themeColor),
                           const SizedBox(width: 8),
-                          Text(
-                            isGu
-                                ? 'ડેમો અજમાવો (૧-ક્લિક પ્રવેશ)'
-                                : (l10n?.tryDemo ?? 'Try Demo (1-Click Access)'),
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: themeColor,
+                          Flexible(
+                            child: Text(
+                              isGu
+                                  ? 'ડેમો અજમાવો (૧-ક્લિક પ્રવેશ)'
+                                  : (l10n?.tryDemo ?? 'Try Demo (1-Click Access)'),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: themeColor,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -885,7 +890,8 @@ class _LoginScreenState extends State<LoginScreen> {
               );
             }),
             const SizedBox(height: 4),
-            Row(
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Text(
                   isGu ? 'પાસવર્ડ (તમામ ખાતાઓ): ' : 'Password (all accounts): ',
@@ -902,7 +908,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
           ] else ...[
-            Row(
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Text(
                   isGu ? 'ઈમેલ: ' : 'Email: ',
@@ -919,7 +926,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
             const SizedBox(height: 4),
-            Row(
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Text(
                   isGu ? 'પાસવર્ડ: ' : 'Password: ',

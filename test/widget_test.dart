@@ -11,8 +11,32 @@ import 'package:learning_setu/services/fast2sms_service.dart';
 import 'package:learning_setu/mock_data/mock_data.dart';
 import 'package:learning_setu/providers/quiz_provider.dart';
 import 'package:learning_setu/providers/assessment_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:learning_setu/l10n/app_localizations.dart';
+import 'package:learning_setu/providers/locale_provider.dart';
+import 'package:learning_setu/providers/auth_provider.dart';
+import 'package:learning_setu/repositories/mock/mock_auth_repository.dart';
+import 'package:learning_setu/screens/auth/welcome_screen.dart';
+import 'package:learning_setu/screens/auth/login_screen.dart';
 import 'package:learning_setu/widgets/stat_card.dart';
+import 'package:learning_setu/providers/student_provider.dart';
+import 'package:learning_setu/providers/school_provider.dart';
+import 'package:learning_setu/providers/remedial_provider.dart';
+import 'package:learning_setu/providers/performance_provider.dart';
+import 'package:learning_setu/repositories/mock/mock_student_repository.dart';
+import 'package:learning_setu/repositories/mock/mock_remedial_repository.dart';
+import 'package:learning_setu/screens/dashboards/teacher_dashboard.dart';
+import 'package:learning_setu/screens/dashboards/principal_dashboard.dart';
 import 'package:learning_setu/screens/dashboards/brc_dashboard.dart';
+import 'package:learning_setu/screens/dashboards/parent_dashboard.dart';
+import 'package:learning_setu/screens/students/student_detail_screen.dart';
+import 'package:learning_setu/screens/subjects/subjects_screen.dart';
+import 'package:learning_setu/screens/results/results_screen.dart';
+import 'package:learning_setu/screens/performance/performance_screen.dart';
+import 'package:learning_setu/screens/remedial/remedial_screen.dart';
+import 'package:learning_setu/screens/profile/profile_screen.dart';
+import 'package:learning_setu/screens/profile/settings_screen.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -510,6 +534,245 @@ void main() {
       final class3Students = MockData.students.where((s) => s.classId == 'class_3a_s1').map((s) => s.id).toSet();
       for (final a in prov.assessments) {
         expect(class3Students.contains(a.studentId), isTrue);
+      }
+    });
+  });
+
+  group('12. Two-Pass Mobile Viewport & Localization Overflow Stress Tests', () {
+    testWidgets('WelcomeScreen renders without overflow on 320x568 (iPhone SE) in English and Gujarati', (tester) async {
+      final mockAuthRepo = MockAuthRepository();
+      final storage = StorageService();
+
+      for (final locale in [const Locale('en'), const Locale('gu')]) {
+        await tester.binding.setSurfaceSize(const Size(320, 568));
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => LocaleProvider()..setLocale(locale)),
+              ChangeNotifierProvider(create: (_) => AuthProvider(mockAuthRepo, storage)),
+            ],
+            child: MaterialApp(
+              locale: locale,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale('en'), Locale('gu')],
+              home: const WelcomeScreen(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: 'Failed with overflow in $locale on 320x568');
+      }
+    });
+
+    testWidgets('LoginScreen renders without overflow on 320x568 & 360x640 across all 4 roles in Gujarati', (tester) async {
+      final mockAuthRepo = MockAuthRepository();
+      final storage = StorageService();
+
+      for (final role in UserRole.values) {
+        for (final size in [const Size(320, 568), const Size(360, 640)]) {
+          await tester.binding.setSurfaceSize(size);
+          await tester.pumpWidget(
+            MultiProvider(
+              providers: [
+                ChangeNotifierProvider(create: (_) => LocaleProvider()..setLocale(const Locale('gu'))),
+                ChangeNotifierProvider(create: (_) => AuthProvider(mockAuthRepo, storage)),
+              ],
+              child: MaterialApp(
+                locale: const Locale('gu'),
+                localizationsDelegates: const [
+                  AppLocalizations.delegate,
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                supportedLocales: const [Locale('en'), Locale('gu')],
+                home: LoginScreen(role: role),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull, reason: 'Failed with overflow for ${role.name} on $size in Gujarati');
+        }
+      }
+    });
+
+    testWidgets('Dashboards render without overflow on 320x568 and 360x640 mobile viewports in Gujarati', (tester) async {
+      final mockAuthRepo = MockAuthRepository();
+      final mockStudentRepo = MockStudentRepository();
+      final mockSchoolRepo = MockSchoolRepository();
+      final mockAssessRepo = MockAssessmentRepository();
+      final mockQuizRepo = MockQuizRepository();
+      final mockRemedialRepo = MockRemedialRepository();
+      final storage = StorageService();
+      final aiService = AiAnalysisService();
+      final perfService = PerformanceService(mockAssessRepo, mockSchoolRepo, aiService: aiService);
+
+      Widget buildTestApp(Widget home, UserModel user, Size size) {
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => LocaleProvider()..setLocale(const Locale('gu'))),
+            ChangeNotifierProvider(create: (_) {
+              final auth = AuthProvider(mockAuthRepo, storage);
+              auth.demoLogin(user.role);
+              return auth;
+            }),
+            ChangeNotifierProvider(create: (_) => StudentProvider(mockStudentRepo)),
+            ChangeNotifierProvider(create: (_) => SchoolProvider(mockSchoolRepo)),
+            ChangeNotifierProvider(create: (_) => AssessmentProvider(mockAssessRepo, storage)),
+            ChangeNotifierProvider(create: (_) => QuizProvider(mockQuizRepo, storage)),
+            ChangeNotifierProvider(create: (_) => RemedialProvider(mockRemedialRepo, storage)),
+            ChangeNotifierProvider(create: (_) => PerformanceProvider(perfService)),
+          ],
+          child: MaterialApp(
+            locale: const Locale('gu'),
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en'), Locale('gu')],
+            home: home,
+          ),
+        );
+      }
+
+      for (final size in [const Size(320, 568), const Size(360, 640)]) {
+        await tester.binding.setSurfaceSize(size);
+
+        // 1. Teacher Dashboard
+        await tester.pumpWidget(buildTestApp(const TeacherDashboard(), MockData.demoUsers[0], size));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: 'TeacherDashboard overflowed on $size');
+
+        // 2. Principal Dashboard
+        await tester.pumpWidget(buildTestApp(const PrincipalDashboard(), MockData.demoUsers[1], size));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: 'PrincipalDashboard overflowed on $size');
+
+        // 3. BRC Dashboard
+        await tester.pumpWidget(buildTestApp(const BrcDashboard(), MockData.demoUsers[2], size));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: 'BrcDashboard overflowed on $size');
+
+        // 4. Parent Dashboard
+        await tester.pumpWidget(buildTestApp(const ParentDashboard(), MockData.demoUsers[3], size));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: 'ParentDashboard overflowed on $size');
+      }
+    });
+
+    testWidgets('Detail, Performance, Results, Remedial, and Settings screens render without overflow on 320x568 & 360x640 in Gujarati', (tester) async {
+      final mockAuthRepo = MockAuthRepository();
+      final mockStudentRepo = MockStudentRepository();
+      final mockSchoolRepo = MockSchoolRepository();
+      final mockAssessRepo = MockAssessmentRepository();
+      final mockQuizRepo = MockQuizRepository();
+      final mockRemedialRepo = MockRemedialRepository();
+      final storage = StorageService();
+      final aiService = AiAnalysisService();
+      final perfService = PerformanceService(mockAssessRepo, mockSchoolRepo, aiService: aiService);
+
+      Widget buildTestApp(Widget home, Size size) {
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => LocaleProvider()..setLocale(const Locale('gu'))),
+            ChangeNotifierProvider(create: (_) {
+              final auth = AuthProvider(mockAuthRepo, storage);
+              auth.demoLogin(UserRole.teacher);
+              return auth;
+            }),
+            ChangeNotifierProvider(create: (_) {
+              final prov = StudentProvider(mockStudentRepo);
+              prov.loadStudentsByClass('class_3a_s1');
+              prov.selectStudent(MockData.students[0]);
+              return prov;
+            }),
+            ChangeNotifierProvider(create: (_) {
+              final prov = SchoolProvider(mockSchoolRepo);
+              prov.loadSubjects(classId: 'class_3a_s1');
+              return prov;
+            }),
+            ChangeNotifierProvider(create: (_) {
+              final prov = AssessmentProvider(mockAssessRepo, storage);
+              prov.loadAssessmentsByStudent('student_1');
+              return prov;
+            }),
+            ChangeNotifierProvider(create: (_) => QuizProvider(mockQuizRepo, storage)),
+            ChangeNotifierProvider(create: (_) {
+              final prov = RemedialProvider(mockRemedialRepo, storage);
+              prov.loadRemedialsByStudent('student_1');
+              return prov;
+            }),
+            ChangeNotifierProvider(create: (_) {
+              final prov = PerformanceProvider(perfService);
+              prov.loadPerformance('student_1');
+              return prov;
+            }),
+          ],
+          child: MaterialApp(
+            locale: const Locale('gu'),
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en'), Locale('gu')],
+            home: home,
+          ),
+        );
+      }
+
+      for (final size in [const Size(320, 568), const Size(360, 640)]) {
+        await tester.binding.setSurfaceSize(size);
+
+        // 1. Student Detail Screen
+        await tester.pumpWidget(buildTestApp(const StudentDetailScreen(studentId: 'student_1'), size));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(tester.takeException(), isNull, reason: 'StudentDetailScreen overflowed on $size');
+
+        // 2. Subjects Screen
+        await tester.pumpWidget(buildTestApp(const SubjectsScreen(), size));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(tester.takeException(), isNull, reason: 'SubjectsScreen overflowed on $size');
+
+        // 3. Results Screen
+        await tester.pumpWidget(buildTestApp(const ResultsScreen(), size));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(tester.takeException(), isNull, reason: 'ResultsScreen overflowed on $size');
+
+        // 4. Performance Screen
+        await tester.pumpWidget(buildTestApp(const PerformanceScreen(studentId: 'student_1'), size));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(tester.takeException(), isNull, reason: 'PerformanceScreen overflowed on $size');
+
+        // 5. Remedial Screen
+        await tester.pumpWidget(buildTestApp(const RemedialScreen(), size));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(tester.takeException(), isNull, reason: 'RemedialScreen overflowed on $size');
+
+        // 6. Profile Screen
+        await tester.pumpWidget(buildTestApp(const ProfileScreen(), size));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(tester.takeException(), isNull, reason: 'ProfileScreen overflowed on $size');
+
+        // 7. Settings Screen
+        await tester.pumpWidget(buildTestApp(const SettingsScreen(), size));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(tester.takeException(), isNull, reason: 'SettingsScreen overflowed on $size');
       }
     });
   });

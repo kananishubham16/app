@@ -271,21 +271,20 @@ class _AddAssessmentScreenState extends State<AddAssessmentScreen> {
     );
 
     final assessProv = context.read<AssessmentProvider>();
+    final perfProv = context.read<PerformanceProvider>();
+    final studentProv = context.read<StudentProvider>();
+    final messenger = ScaffoldMessenger.of(context);
     final success = await assessProv.addAssessment(newAssessment);
 
     if (mounted) {
       if (success) {
         // Trigger performance summary refresh
-        await context.read<PerformanceProvider>().loadPerformance(
-          _selectedStudentId!,
-        );
+        await perfProv.loadPerformance(_selectedStudentId!);
+        if (!mounted) return;
 
-        final studentProv = context.read<StudentProvider>();
         final student = studentProv.students
             .where((s) => s.id == _selectedStudentId)
             .firstOrNull;
-
-        final isGu = Localizations.localeOf(context).languageCode == 'gu';
 
         // Check if student has parent phone info
         if (student != null && student.parentPhone != null && mounted) {
@@ -312,7 +311,7 @@ class _AddAssessmentScreenState extends State<AddAssessmentScreen> {
             message: bilingualMessage,
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
+          messenger.showSnackBar(
             SnackBar(
               content: Text(
                 'Assessment logged successfully! Score: ${obtainedMarks.toStringAsFixed(0)}/${totalMarks.toStringAsFixed(0)}',
@@ -571,12 +570,16 @@ class _AddAssessmentScreenState extends State<AddAssessmentScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Topic Scores Allocation',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Text(
+                            'Topic Scores Allocation',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -712,11 +715,13 @@ class _AddAssessmentScreenState extends State<AddAssessmentScreen> {
                                     ),
                                   ),
                                   validator: (val) {
-                                    if (val == null || val.trim().isEmpty)
+                                    if (val == null || val.trim().isEmpty) {
                                       return 'Req';
+                                    }
                                     final numVal = double.tryParse(val.trim());
-                                    if (numVal == null || numVal <= 0)
+                                    if (numVal == null || numVal <= 0) {
                                       return '>0';
+                                    }
                                     return null;
                                   },
                                   onChanged: (_) => setState(() {}),

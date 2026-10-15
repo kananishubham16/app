@@ -21,8 +21,9 @@ class MockQuizRepository implements QuizRepository {
     final classMatches = topicQuestions.where((q) {
       if (q.classId.isEmpty) return true;
       if (q.classId == classId) return true;
-      if (classId.contains(q.classId) || q.classId.contains(classId))
+      if (classId.contains(q.classId) || q.classId.contains(classId)) {
         return true;
+      }
       return false;
     }).toList();
 

@@ -216,21 +216,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        OutlinedButton.icon(
-                          icon: const Icon(Icons.edit_outlined, size: 16),
-                          label: Text(
-                            isGu
-                                ? 'ડેમો વિગતો સંપાદિત કરો'
-                                : 'Edit Demo Details',
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.edit_outlined, size: 16),
+                            label: Text(
+                              isGu
+                                  ? 'ડેમો વિગતો સંપાદિત કરો'
+                                  : 'Edit Demo Details',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(0, 44),
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isEditing = true;
+                              });
+                            },
                           ),
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 44),
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _isEditing = true;
-                            });
-                          },
                         ),
                       ] else ...[
                         // Edit Mode
@@ -338,7 +342,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       'Return to role selection welcome screen',
                     ),
                     trailing: const Icon(Icons.chevron_right_rounded),
-                    onTap: () => _confirmLogout(context),
+                    onTap: () => _confirmLogout(),
                   ),
                 ],
               ),
@@ -387,21 +391,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         Icon(icon, size: 18, color: AppColors.textSecondary),
         const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 11,
-                color: AppColors.textSecondary,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-            Text(
-              value,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-            ),
-          ],
+              Text(
+                value,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -430,10 +440,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   size: 22,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  'Selected Student Profile',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    isGu ? 'પસંદ કરેલ વિદ્યાર્થી પ્રોફાઇલ' : 'Selected Student Profile',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -481,9 +494,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: const Icon(Icons.open_in_new_rounded, size: 16),
                 label: Text(
                   isGu ? 'વિદ્યાર્થી એનાલિટિક્સ ખોલો' : 'Open Student Analytics',
+                  overflow: TextOverflow.ellipsis,
                 ),
                 style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 42),
+                  minimumSize: const Size(0, 42),
                 ),
                 onPressed: () {
                   Navigator.pushNamed(
@@ -500,7 +514,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Future<void> _confirmLogout(BuildContext context) async {
+  Future<void> _confirmLogout() async {
     final isGu = Localizations.localeOf(context).languageCode == 'gu';
     final l10n = AppLocalizations.of(context);
 
@@ -532,8 +546,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
 
-    if (shouldLogout == true && context.mounted) {
+    if (shouldLogout == true && mounted) {
       await context.read<AuthProvider>().logout();
+      if (!mounted) return;
       Navigator.pushNamedAndRemoveUntil(
         context,
         AppRouter.welcome,

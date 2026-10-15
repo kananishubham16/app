@@ -214,18 +214,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
 
     if (confirmed == true && mounted) {
+      final studentProv = context.read<StudentProvider>();
+      final assessProv = context.read<AssessmentProvider>();
+      final quizProv = context.read<QuizProvider>();
+      final remedialProv = context.read<RemedialProvider>();
+      final perfProv = context.read<PerformanceProvider>();
+      final messenger = ScaffoldMessenger.of(context);
+
       setState(() {
         _isResetting = true;
       });
 
       final storage = StorageService();
       await storage.resetDemoData();
-
-      final studentProv = context.read<StudentProvider>();
-      final assessProv = context.read<AssessmentProvider>();
-      final quizProv = context.read<QuizProvider>();
-      final remedialProv = context.read<RemedialProvider>();
-      final perfProv = context.read<PerformanceProvider>();
 
       quizProv.resetQuiz();
       perfProv.clear();
@@ -242,7 +243,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         setState(() {
           _isResetting = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text(
               isGu
@@ -549,11 +550,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           children: [
                             Row(
                               children: [
-                                const Text(
-                                  'Fast2SMS Dev Gateway',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
+                                const Flexible(
+                                  child: Text(
+                                    'Fast2SMS Dev Gateway',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                                 const SizedBox(width: 8),

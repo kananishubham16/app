@@ -44,14 +44,17 @@ class _RemedialScreenState extends State<RemedialScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_initialized) {
-      final studentProv = context.read<StudentProvider>();
-      final uniqueStudents = <String, StudentModel>{for (var s in studentProv.students) s.id: s}.values.toList();
-      _selectedStudentId ??= studentProv.selectedStudent?.id;
-      if (_selectedStudentId != null && !uniqueStudents.any((s) => s.id == _selectedStudentId)) {
-        _selectedStudentId = uniqueStudents.isNotEmpty ? uniqueStudents.first.id : null;
-      }
-      _loadData();
       _initialized = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final studentProv = context.read<StudentProvider>();
+        final uniqueStudents = <String, StudentModel>{for (var s in studentProv.students) s.id: s}.values.toList();
+        _selectedStudentId ??= studentProv.selectedStudent?.id;
+        if (_selectedStudentId != null && !uniqueStudents.any((s) => s.id == _selectedStudentId)) {
+          _selectedStudentId = uniqueStudents.isNotEmpty ? uniqueStudents.first.id : null;
+        }
+        _loadData();
+      });
     }
   }
 
@@ -489,6 +492,7 @@ class _RemedialScreenState extends State<RemedialScreen> {
             // Status and Topic Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Column(
@@ -514,41 +518,47 @@ class _RemedialScreenState extends State<RemedialScreen> {
                                 : FontWeight.normal,
                           ),
                         ),
-
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: statusColor.withOpacity(0.35)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: statusColor,
-                        ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        action.statusDisplayName,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: statusColor,
-                        ),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: statusColor.withOpacity(0.35)),
                       ),
-                    ],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: statusColor,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            action.statusDisplayName,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: statusColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -587,14 +597,17 @@ class _RemedialScreenState extends State<RemedialScreen> {
                   color: AppColors.textSecondary,
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  '${Localizations.localeOf(context).languageCode == "gu" ? "મુદત તારીખ:" : "Due Date:"} $dueDateStr',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
+                Expanded(
+                  child: Text(
+                    '${Localizations.localeOf(context).languageCode == "gu" ? "મુદત તારીખ:" : "Due Date:"} $dueDateStr',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 if (action.hasQuiz) ...[
-                  const Spacer(),
+                  const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 6,
@@ -653,7 +666,7 @@ class _RemedialScreenState extends State<RemedialScreen> {
                         children: [
                           Text(
                             Localizations.localeOf(context).languageCode == 'gu' ? 'વાલી સૂચના:' : 'Parent Instruction:',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
                               color: Color(0xFF2E7D32),
@@ -710,39 +723,47 @@ class _RemedialScreenState extends State<RemedialScreen> {
               ),
             ],
 
-            const SizedBox(height: 14),
-
-            // Action Buttons
-            Row(
-              children: [
-                if (action.hasQuiz) ...[
-                  if (!isTeacher && !isParent) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.purple.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.purple.shade200),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.assignment_turned_in_outlined, size: 16, color: Colors.purple.shade700),
-                          const SizedBox(width: 6),
-                          Text(
-                            AppLocalizations.of(context)?.quizAssignedObserver ??
-                                'Quiz Assigned (Supervised by Teacher / Parent)',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.purple.shade800,
-                            ),
-                          ),
-                        ],
+            // Observer notice if admin/principal/BRC
+            if (action.hasQuiz && !isTeacher && !isParent) ...[
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.purple.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.purple.shade200),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.assignment_turned_in_outlined, size: 16, color: Colors.purple.shade700),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)?.quizAssignedObserver ??
+                            'Quiz Assigned (Supervised by Teacher / Parent)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.purple.shade800,
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                  ] else ...[
+                  ],
+                ),
+              ),
+            ],
+
+            // Action Buttons
+            if ((action.hasQuiz && (isTeacher || isParent)) || isTeacher) ...[
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  if (action.hasQuiz && (isTeacher || isParent))
                     ElevatedButton.icon(
                       icon: const Icon(Icons.play_circle_fill_rounded, size: 18),
                       label: Text(
@@ -770,22 +791,18 @@ class _RemedialScreenState extends State<RemedialScreen> {
                         ).then((_) => _loadData());
                       },
                     ),
-                    const SizedBox(width: 8),
-                  ],
-                ],
-
-                if (isTeacher) ...[
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.update_rounded, size: 16),
-                    label: Text(AppLocalizations.of(context)?.updateStatus ?? 'Update Status'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(0, 42),
+                  if (isTeacher)
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.update_rounded, size: 16),
+                      label: Text(AppLocalizations.of(context)?.updateStatus ?? 'Update Status'),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(0, 42),
+                      ),
+                      onPressed: () => _showUpdateStatusDialog(action),
                     ),
-                    onPressed: () => _showUpdateStatusDialog(action),
-                  ),
                 ],
-              ],
-            ),
+              ),
+            ],
           ],
         ),
       ),
@@ -802,10 +819,11 @@ class _RemedialScreenState extends State<RemedialScreen> {
             final color = _getStatusColor(status);
             return SimpleDialogOption(
               onPressed: () async {
-                Navigator.pop(context);
+                final messenger = ScaffoldMessenger.of(context);
                 final remProv = context.read<RemedialProvider>();
+                Navigator.pop(context);
                 await remProv.updateStatus(action.id, status);
-                ScaffoldMessenger.of(context).showSnackBar(
+                messenger.showSnackBar(
                   SnackBar(content: Text('Updated to ${status.name}')),
                 );
               },

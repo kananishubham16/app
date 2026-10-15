@@ -127,8 +127,9 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: constraints.maxWidth > 600 ? 1.4 : 1.15,
+                childAspectRatio: constraints.maxWidth > 600
+                    ? 1.4
+                    : (constraints.maxWidth < 360 ? 0.95 : 1.15),
                 children: [
                   StatCard(
                     title: Localizations.localeOf(context).languageCode == 'gu' ? 'કુલ વિદ્યાર્થીઓ' : 'Total Students',
@@ -211,6 +212,7 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
         child: Row(
           children: [
             Expanded(
+              flex: 6,
               child: Row(
                 children: [
                   Icon(
@@ -224,12 +226,14 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
                       child: DropdownButton<String>(
                         value: effectiveClassFilter,
                         isDense: true,
+                        isExpanded: true,
                         items: [
                           DropdownMenuItem(
                             value: 'ALL',
                             child: Text(
                               Localizations.localeOf(context).languageCode == 'gu' ? 'બધા વર્ગો' : 'All Classes',
                               style: const TextStyle(fontWeight: FontWeight.w600),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           ...classes.map(
@@ -240,6 +244,7 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
                                 ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ),
@@ -262,26 +267,42 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
               color: Theme.of(context).colorScheme.outlineVariant,
             ),
             const SizedBox(width: 8),
-            DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: effectiveDateFilter,
-                isDense: true,
-                items: [
-                  DropdownMenuItem(
-                    value: '30days',
-                    child: Text(Localizations.localeOf(context).languageCode == 'gu' ? 'છેલ્લા ૩૦ દિવસ' : 'Last 30 Days'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'term',
-                    child: Text(Localizations.localeOf(context).languageCode == 'gu' ? 'સત્ર ૧ (ચાલુ)' : 'Term 1 (Current)'),
-                  ),
-                  DropdownMenuItem(value: 'year', child: Text(Localizations.localeOf(context).languageCode == 'gu' ? 'આખું વર્ષ' : 'Full Year')),
-                ],
-                onChanged: (val) {
-                  if (val != null) {
-                    setState(() => _selectedDateFilter = val);
-                  }
-                },
+            Expanded(
+              flex: 5,
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: effectiveDateFilter,
+                  isDense: true,
+                  isExpanded: true,
+                  items: [
+                    DropdownMenuItem(
+                      value: '30days',
+                      child: Text(
+                        Localizations.localeOf(context).languageCode == 'gu' ? 'છેલ્લા ૩૦ દિવસ' : 'Last 30 Days',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'term',
+                      child: Text(
+                        Localizations.localeOf(context).languageCode == 'gu' ? 'સત્ર ૧ (ચાલુ)' : 'Term 1 (Current)',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'year',
+                      child: Text(
+                        Localizations.localeOf(context).languageCode == 'gu' ? 'આખું વર્ષ' : 'Full Year',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() => _selectedDateFilter = val);
+                    }
+                  },
+                ),
               ),
             ),
           ],
@@ -306,28 +327,34 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.secondary.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(8),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.secondary.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.assignment_turned_in,
+                          color: AppColors.secondary,
+                          size: 22,
+                        ),
                       ),
-                      child: Icon(
-                        Icons.assignment_turned_in,
-                        color: AppColors.secondary,
-                        size: 22,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          Localizations.localeOf(context).languageCode == 'gu' ? 'ઉપચારાત્મક કાર્ય પ્રગતિ' : 'Remedial Action Progress',
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      Localizations.localeOf(context).languageCode == 'gu' ? 'ઉપચારાત્મક કાર્ય પ્રગતિ' : 'Remedial Action Progress',
-                      style: Theme.of(context).textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 Text(
                   '$completionRate%',
                   style: TextStyle(
@@ -346,8 +373,10 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
               height: 10,
             ),
             const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+            Wrap(
+              alignment: WrapAlignment.spaceAround,
+              spacing: 12,
+              runSpacing: 8,
               children: [
                 _buildMetricSnippet(
                   Localizations.localeOf(context).languageCode == 'gu' ? 'સોંપાયેલ' : 'Assigned',
@@ -436,7 +465,8 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
+                    Expanded(
+                      child: Row(
                       children: [
                         CircleAvatar(
                           radius: 16,
@@ -452,27 +482,35 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              cls.displayName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                cls.displayName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                            Text(
-                              '${cls.studentIds.length} ${Localizations.localeOf(context).languageCode == "gu" ? "વિદ્યાર્થીઓ નોંધાયેલ" : "Students enrolled"}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
+                              Text(
+                                '${cls.studentIds.length} ${Localizations.localeOf(context).languageCode == "gu" ? "વિદ્યાર્થીઓ નોંધાયેલ" : "Students enrolled"}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -529,11 +567,14 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
                   size: 20,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  Localizations.localeOf(context).languageCode == 'gu' ? 'પ્રાથમિક ઉપચારાત્મક ચેતવણીઓ' : 'Priority Remediation Alerts',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.weakColor,
+                Expanded(
+                  child: Text(
+                    Localizations.localeOf(context).languageCode == 'gu' ? 'પ્રાથમિક ઉપચારાત્મક ચેતવણીઓ' : 'Priority Remediation Alerts',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.weakColor,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -594,43 +635,52 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: AppColors.getPerformanceColor(level)
-                                  .withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.menu_book_rounded,
-                              color: AppColors.getPerformanceColor(level),
-                              size: 22,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                subject.getLocalizedName(context),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppColors.getPerformanceColor(level)
+                                    .withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              Text(
-                                '${subject.topics.length} ${Localizations.localeOf(context).languageCode == "gu" ? "અભ્યાસક્રમ વિષયો" : "Curriculum Topics"}',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
+                              child: Icon(
+                                Icons.menu_book_rounded,
+                                color: AppColors.getPerformanceColor(level),
+                                size: 22,
                               ),
-                            ],
-                          ),
-                        ],
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    subject.getLocalizedName(context),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    '${subject.topics.length} ${Localizations.localeOf(context).languageCode == "gu" ? "અભ્યાસક્રમ વિષયો" : "Curriculum Topics"}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
                         '${score.toStringAsFixed(1)}%',
                         style: TextStyle(

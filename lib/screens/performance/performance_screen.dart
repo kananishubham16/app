@@ -53,25 +53,28 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_initialized) {
-      final authProv = context.read<AuthProvider>();
-      final isBrc = authProv.currentUser?.role == UserRole.brc;
-
-      if (isBrc) {
-        _loadSchoolData();
-      } else {
-        final studentProv = context.read<StudentProvider>();
-        final uniqueStudents = <String, StudentModel>{
-          for (var s in studentProv.students) s.id: s,
-        }.values.toList();
-        _selectedStudentId ??= studentProv.selectedStudent?.id;
-        if (_selectedStudentId == null ||
-            !uniqueStudents.any((s) => s.id == _selectedStudentId)) {
-          _selectedStudentId =
-              uniqueStudents.isNotEmpty ? uniqueStudents.first.id : null;
-        }
-        _loadData();
-      }
       _initialized = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final authProv = context.read<AuthProvider>();
+        final isBrc = authProv.currentUser?.role == UserRole.brc;
+
+        if (isBrc) {
+          _loadSchoolData();
+        } else {
+          final studentProv = context.read<StudentProvider>();
+          final uniqueStudents = <String, StudentModel>{
+            for (var s in studentProv.students) s.id: s,
+          }.values.toList();
+          _selectedStudentId ??= studentProv.selectedStudent?.id;
+          if (_selectedStudentId == null ||
+              !uniqueStudents.any((s) => s.id == _selectedStudentId)) {
+            _selectedStudentId =
+                uniqueStudents.isNotEmpty ? uniqueStudents.first.id : null;
+          }
+          _loadData();
+        }
+      });
     }
   }
 
@@ -935,11 +938,14 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                   size: 22,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  '${Localizations.localeOf(context).languageCode == "gu" ? "મુખ્ય અધ્યયન ક્ષતિઓ" : "Critical Learning Gaps"} (${weakList.length})',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red.shade900,
+                Expanded(
+                  child: Text(
+                    '${Localizations.localeOf(context).languageCode == "gu" ? "મુખ્ય અધ્યયન ક્ષતિઓ" : "Critical Learning Gaps"} (${weakList.length})',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red.shade900,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -1020,11 +1026,14 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
 
                           return OutlinedButton.icon(
                             icon: const Icon(Icons.quiz_rounded, size: 14),
-                            label: Text(
-                              userRole == UserRole.parent
-                                  ? (l10n?.startHomeQuiz ?? 'Start Home Quiz')
-                                  : (l10n?.superviseQuiz ?? 'Supervise Quiz'),
-                              style: const TextStyle(fontSize: 12),
+                            label: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                userRole == UserRole.parent
+                                    ? (l10n?.startHomeQuiz ?? 'Start Home Quiz')
+                                    : (l10n?.superviseQuiz ?? 'Supervise Quiz'),
+                                style: const TextStyle(fontSize: 12),
+                              ),
                             ),
                             style: OutlinedButton.styleFrom(
                               minimumSize: const Size(0, 36),
@@ -1078,12 +1087,16 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  Localizations.localeOf(context).languageCode == 'gu' ? 'પ્રગતિ અને ટ્રેન્ડ ટ્રેકિંગ' : 'Progress & Trend Tracking',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    Localizations.localeOf(context).languageCode == 'gu' ? 'પ્રગતિ અને ટ્રેન્ડ ટ્રેકિંગ' : 'Progress & Trend Tracking',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                const SizedBox(width: 8),
                 const Icon(Icons.show_chart_rounded, color: AppColors.primary),
               ],
             ),

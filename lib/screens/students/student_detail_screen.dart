@@ -41,22 +41,27 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_initialized) {
-      _loadData();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _loadData();
+        }
+      });
       _initialized = true;
     }
   }
 
   Future<void> _loadData() async {
     final studentProv = context.read<StudentProvider>();
-    if (widget.studentId != null && _resolveStudent()?.id != widget.studentId) {
+    final assessmentProv = context.read<AssessmentProvider>();
+    final performanceProv = context.read<PerformanceProvider>();
+    final schoolProv = context.read<SchoolProvider>();
+
+    if (widget.studentId != null && _resolveStudent(listen: false)?.id != widget.studentId) {
       await studentProv.loadStudent(widget.studentId!);
     }
-    final student = _resolveStudent();
+    if (!mounted) return;
+    final student = _resolveStudent(listen: false);
     if (student != null) {
-      final assessmentProv = context.read<AssessmentProvider>();
-      final performanceProv = context.read<PerformanceProvider>();
-      final schoolProv = context.read<SchoolProvider>();
-
       await Future.wait([
         assessmentProv.loadAssessmentsByStudent(student.id),
         performanceProv.loadPerformance(student.id),
@@ -65,10 +70,12 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
     }
   }
 
-  StudentModel? _resolveStudent() {
+  StudentModel? _resolveStudent({bool listen = false}) {
     if (widget.student != null) return widget.student;
 
-    final studentProv = context.watch<StudentProvider>();
+    final studentProv = listen
+        ? context.watch<StudentProvider>()
+        : context.read<StudentProvider>();
     if (widget.studentId != null) {
       final match = studentProv.students
           .where((s) => s.id == widget.studentId)
@@ -83,7 +90,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final student = _resolveStudent();
+    final student = _resolveStudent(listen: true);
     final isGu = Localizations.localeOf(context).languageCode == 'gu';
 
     if (student == null) {
@@ -381,7 +388,10 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     icon: const Icon(Icons.assignment_return_outlined, size: 16),
-                    label: Text(l10n?.remedialActivities ?? (isGu ? 'ઉપચારાત્મક કાર્યો' : 'Remedial Actions')),
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(l10n?.remedialActivities ?? (isGu ? 'ઉપચારાત્મક કાર્યો' : 'Remedial Actions')),
+                    ),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       minimumSize: const Size(0, 40),
@@ -395,7 +405,10 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     icon: const Icon(Icons.insights, size: 16),
-                    label: Text(l10n?.performanceDiagnostic ?? (isGu ? 'નિદાન' : 'Diagnostics')),
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(l10n?.performanceDiagnostic ?? (isGu ? 'નિદાન' : 'Diagnostics')),
+                    ),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       minimumSize: const Size(0, 40),
@@ -515,7 +528,10 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
             Expanded(
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.post_add_rounded, size: 18),
-                label: Text(l10n?.addAssessment ?? (isGu ? 'મૂલ્યાંકન ઉમેરો' : 'Add Assessment')),
+                label: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(l10n?.addAssessment ?? (isGu ? 'મૂલ્યાંકન ઉમેરો' : 'Add Assessment')),
+                ),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   minimumSize: const Size(0, 48),
@@ -533,7 +549,10 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
             Expanded(
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.handyman_rounded, size: 18),
-                label: Text(l10n?.assignPractice ?? (isGu ? 'પ્રેક્ટિસ સોંપો' : 'Assign Practice')),
+                label: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(l10n?.assignPractice ?? (isGu ? 'પ્રેક્ટિસ સોંપો' : 'Assign Practice')),
+                ),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   minimumSize: const Size(0, 48),
@@ -654,25 +673,32 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isGu ? 'વિષયવાર પ્રદર્શન' : 'Subject Performance',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isGu ? 'વિષયવાર પ્રદર્શન' : 'Subject Performance',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    Text(
-                      isGu
-                          ? '${summary.totalSubjects} માંથી ${summary.subjectsAssessed} વિષયોનું મૂલ્યાંકન થયું'
-                          : '${summary.subjectsAssessed} of ${summary.totalSubjects} subjects assessed',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
+                      Text(
+                        isGu
+                            ? '${summary.totalSubjects} માંથી ${summary.subjectsAssessed} વિષયોનું મૂલ્યાંકન થયું'
+                            : '${summary.subjectsAssessed} of ${summary.totalSubjects} subjects assessed',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 PerformanceIndicator(
                   level: summary.overallLevel,
                   percentage: summary.overallPercentage,
@@ -1155,10 +1181,13 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                             children: [
                               Row(
                                 children: [
-                                  Text(
-                                    subjectName,
-                                    style: theme.textTheme.bodyLarge?.copyWith(
-                                      fontWeight: FontWeight.bold,
+                                  Flexible(
+                                    child: Text(
+                                      subjectName,
+                                      style: theme.textTheme.bodyLarge?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                   const SizedBox(width: 6),

@@ -61,20 +61,23 @@ class _ResultsScreenState extends State<ResultsScreen>
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_initialized) {
-      final schoolProv = context.read<SchoolProvider>();
-      final authProv = context.read<AuthProvider>();
-      final user = authProv.currentUser;
-
-      if (_selectedClassId == null) {
-        if (schoolProv.selectedClass != null) {
-          _selectedClassId = schoolProv.selectedClass!.id;
-        } else if (user != null && user.classIds != null && user.classIds!.isNotEmpty) {
-          _selectedClassId = user.classIds!.first;
-        }
-      }
-
-      _loadData();
       _initialized = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final schoolProv = context.read<SchoolProvider>();
+        final authProv = context.read<AuthProvider>();
+        final user = authProv.currentUser;
+
+        if (_selectedClassId == null) {
+          if (schoolProv.selectedClass != null) {
+            _selectedClassId = schoolProv.selectedClass!.id;
+          } else if (user != null && user.classIds != null && user.classIds!.isNotEmpty) {
+            _selectedClassId = user.classIds!.first;
+          }
+        }
+
+        _loadData();
+      });
     }
   }
 
@@ -502,42 +505,15 @@ class _ResultsScreenState extends State<ResultsScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    subjectName,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isQuiz
-                                          ? Colors.purple.shade50
-                                          : AppColors.surfaceVariant,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      isQuiz
-                                          ? (Localizations.localeOf(context).languageCode == 'gu' ? 'ઉપચારાત્મક ક્વિઝ' : 'Remedial Quiz')
-                                          : (Localizations.localeOf(context).languageCode == 'gu' ? 'નિયમિત મૂલ્યાંકન' : 'Regular Assessment'),
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: isQuiz
-                                            ? Colors.purple.shade700
-                                            : AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                              Text(
+                                subjectName,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 4),
                               Row(
@@ -552,45 +528,22 @@ class _ResultsScreenState extends State<ResultsScreen>
                                         : AppColors.textSecondary,
                                   ),
                                   const SizedBox(width: 4),
-                                  Text(
-                                    user?.role == UserRole.brc
-                                        ? '${student?.schoolName ?? "Primary School"} • Class $studentClass Batch'
-                                        : (student != null
-                                            ? '${student.name} • $studentClass'
-                                            : 'Student ${assessment.studentId}'),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: user?.role == UserRole.brc
-                                          ? AppColors.primary
-                                          : AppColors.textSecondary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 2),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.calendar_today_rounded,
-                                    size: 12,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    dateStr,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    '${assessment.topicScores.length} ${Localizations.localeOf(context).languageCode == "gu" ? "વિષયો" : "Topics"}',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.textSecondary,
+                                  Expanded(
+                                    child: Text(
+                                      user?.role == UserRole.brc
+                                          ? '${student?.schoolName ?? "Primary School"} • Class $studentClass Batch'
+                                          : (student != null
+                                              ? '${student.name} • $studentClass'
+                                              : 'Student ${assessment.studentId}'),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: user?.role == UserRole.brc
+                                            ? AppColors.primary
+                                            : AppColors.textSecondary,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ],
@@ -598,6 +551,7 @@ class _ResultsScreenState extends State<ResultsScreen>
                             ],
                           ),
                         ),
+                        const SizedBox(width: 8),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
@@ -609,12 +563,72 @@ class _ResultsScreenState extends State<ResultsScreen>
                               ),
                             ),
                             const SizedBox(height: 4),
-                            PerformanceIndicator(
-                              level: level,
-                              percentage: assessment.percentage,
-                              size: 11,
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: PerformanceIndicator(
+                                level: level,
+                                percentage: assessment.percentage,
+                                size: 11,
+                              ),
                             ),
                           ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isQuiz
+                                ? Colors.purple.shade50
+                                : AppColors.surfaceVariant,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            isQuiz
+                                ? (Localizations.localeOf(context).languageCode == 'gu' ? 'ઉપચારાત્મક ક્વિઝ' : 'Remedial Quiz')
+                                : (Localizations.localeOf(context).languageCode == 'gu' ? 'નિયમિત મૂલ્યાંકન' : 'Regular Assessment'),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: isQuiz
+                                  ? Colors.purple.shade700
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.calendar_today_rounded,
+                              size: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              dateStr,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          '${assessment.topicScores.length} ${Localizations.localeOf(context).languageCode == "gu" ? "વિષયો" : "Topics"}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ],
                     ),

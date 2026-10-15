@@ -362,37 +362,53 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      Localizations.localeOf(context).languageCode == 'gu' ? 'તાજેતરનો મૂલ્યાંકન સ્કોર' : 'Latest Assessment Score',
-                      style: theme.textTheme.labelSmall,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      latestAssessment != null
-                          ? '${latestAssessment.obtainedMarks.toStringAsFixed(0)} / ${latestAssessment.totalMarks.toStringAsFixed(0)} (${latestAssessment.percentage.toStringAsFixed(0)}%)'
-                          : (Localizations.localeOf(context).languageCode == 'gu' ? 'હજુ સુધી મૂલ્યાંકન નથી થયું' : 'Not assessed yet'),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.getPerformanceColor(level),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        Localizations.localeOf(context).languageCode == 'gu' ? 'તાજેતરનો મૂલ્યાંકન સ્કોર' : 'Latest Assessment Score',
+                        style: theme.textTheme.labelSmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 2),
+                      Text(
+                        latestAssessment != null
+                            ? '${latestAssessment.obtainedMarks.toStringAsFixed(0)} / ${latestAssessment.totalMarks.toStringAsFixed(0)} (${latestAssessment.percentage.toStringAsFixed(0)}%)'
+                            : (Localizations.localeOf(context).languageCode == 'gu' ? 'હજુ સુધી મૂલ્યાંકન નથી થયું' : 'Not assessed yet'),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.getPerformanceColor(level),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(Localizations.localeOf(context).languageCode == 'gu' ? 'મૂલ્યાંકન તારીખ' : 'Assessment Date', style: theme.textTheme.labelSmall),
-                    const SizedBox(height: 2),
-                    Text(
-                      dateStr,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        Localizations.localeOf(context).languageCode == 'gu' ? 'મૂલ્યાંકન તારીખ' : 'Assessment Date',
+                        style: theme.textTheme.labelSmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 2),
+                      Text(
+                        dateStr,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -730,12 +746,16 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              Localizations.localeOf(context).languageCode == 'gu' ? 'વિષય સંબંધિત ઉપચારાત્મક કાર્યો' : 'Subject Remedial Actions',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+            Expanded(
+              child: Text(
+                Localizations.localeOf(context).languageCode == 'gu' ? 'વિષય સંબંધિત ઉપચારાત્મક કાર્યો' : 'Subject Remedial Actions',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
+            const SizedBox(width: 8),
             TextButton.icon(
               icon: const Icon(Icons.add, size: 16),
               label: Text(Localizations.localeOf(context).languageCode == 'gu' ? 'સોંપો' : 'Assign'),

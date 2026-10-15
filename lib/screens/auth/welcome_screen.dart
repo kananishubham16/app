@@ -85,8 +85,11 @@ class WelcomeScreen extends StatelessWidget {
   Widget _buildTopBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 8,
+        runSpacing: 8,
         children: [
           // Initiative Chip
           Container(
@@ -98,28 +101,32 @@ class WelcomeScreen extends StatelessWidget {
                 color: const Color(0xFF1565C0).withOpacity(0.2),
               ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF00897B),
-                    shape: BoxShape.circle,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF00897B),
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'SFIC 2026 • PS000060',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1565C0),
-                    letterSpacing: 0.3,
+                  const SizedBox(width: 8),
+                  const Text(
+                    'SFIC 2026 • PS000060',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1565C0),
+                      letterSpacing: 0.3,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
@@ -257,36 +264,39 @@ class WelcomeScreen extends StatelessWidget {
         const SizedBox(height: 20),
 
         // App Name
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              isGu ? 'લર્નિંગ ' : 'Learning ',
-              style: const TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.5,
-                color: Color(0xFF1E293B),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1565C0),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                isGu ? 'સેતુ' : 'Setu',
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                isGu ? 'લર્નિંગ ' : 'Learning ',
                 style: const TextStyle(
                   fontSize: 32,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
-                  color: Colors.white,
+                  color: Color(0xFF1E293B),
                 ),
               ),
-            ),
-          ],
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1565C0),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  isGu ? 'સેતુ' : 'Setu',
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.5,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
 
         const SizedBox(height: 10),
@@ -331,21 +341,23 @@ class WelcomeScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Container(width: 32, height: 1.5, color: const Color(0xFFCBD5E1)),
-        const SizedBox(width: 12),
-        Text(
-          l10n?.selectRole ?? 'Select your role to explore the portal',
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF475569),
-            letterSpacing: 0.2,
+        Container(width: 20, height: 1.5, color: const Color(0xFFCBD5E1)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            l10n?.selectRole ?? 'Select your role to explore the portal',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF475569),
+              letterSpacing: 0.2,
+            ),
           ),
         ),
-        const SizedBox(width: 12),
-        Container(width: 32, height: 1.5, color: const Color(0xFFCBD5E1)),
+        const SizedBox(width: 8),
+        Container(width: 20, height: 1.5, color: const Color(0xFFCBD5E1)),
       ],
     );
   }
@@ -406,19 +418,20 @@ class WelcomeScreen extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        int crossAxisCount;
-        double childAspectRatio;
 
-        if (width >= 860) {
-          crossAxisCount = 4;
-          childAspectRatio = 0.82;
-        } else if (width >= 560) {
-          crossAxisCount = 2;
-          childAspectRatio = 1.25;
-        } else {
-          crossAxisCount = 2;
-          childAspectRatio = 0.70;
+        if (width < 560) {
+          return Column(
+            children: roles.map((role) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: _buildRoleCard(context, role),
+              );
+            }).toList(),
+          );
         }
+
+        final int crossAxisCount = width >= 860 ? 4 : 2;
+        final double childAspectRatio = width >= 860 ? 0.82 : 1.25;
 
         return GridView.builder(
           shrinkWrap: true,
@@ -475,7 +488,7 @@ class WelcomeScreen extends StatelessWidget {
               padding: const EdgeInsets.all(13.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Top section: Icon + Badge
                   Row(
@@ -549,6 +562,8 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+
+                  const SizedBox(height: 14),
 
                   // Bottom Action Link
                   Row(

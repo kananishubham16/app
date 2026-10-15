@@ -312,11 +312,14 @@ class QuizResultScreen extends StatelessWidget {
                         width: double.infinity,
                         child: ElevatedButton.icon(
                           icon: const Icon(Icons.send_rounded, size: 18),
-                          label: Text(
-                            isGu
-                                ? 'વાલીને પરિણામ મોકલો (Free SMS)'
-                                : 'Forward Result to Parent (Free SMS)',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          label: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              isGu
+                                  ? 'વાલીને પરિણામ મોકલો (Free SMS)'
+                                  : 'Forward Result to Parent (Free SMS)',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
