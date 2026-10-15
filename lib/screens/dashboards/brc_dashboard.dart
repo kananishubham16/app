@@ -18,8 +18,6 @@ import 'package:learning_setu/mock_data/mock_data.dart';
 import 'package:learning_setu/models/assessment_model.dart';
 import 'package:learning_setu/models/remedial_model.dart';
 import 'package:learning_setu/app/theme.dart';
-import 'package:learning_setu/app/app_router.dart';
-import 'package:learning_setu/models/user_model.dart';
 import 'package:learning_setu/providers/performance_provider.dart';
 
 /// Model representing a scheduled BRC pedagogical inspection visit with calendar reminder
@@ -55,10 +53,7 @@ class BrcDashboard extends StatefulWidget {
 class _BrcDashboardState extends State<BrcDashboard> {
   bool _initialized = false;
   late List<BrcSchoolVisit> _scheduledVisits;
-  String _performanceFilterSchoolId = 'all';
-
-  late List<Map<String, dynamic>> _dispatchedKits;
-  late List<Map<String, String>> _mentorshipPairings;
+  final String _performanceFilterSchoolId = 'all';
 
   @override
   void initState() {
@@ -75,36 +70,6 @@ class _BrcDashboardState extends State<BrcDashboard> {
         reminderTiming: '1 day before (09:00 AM)',
         notes: 'Review remedial worksheets in Class 3 Math and assess subtraction gaps.',
       ),
-    ];
-
-    _dispatchedKits = [
-      {
-        'id': 'kit_1',
-        'schoolId': 'school_2',
-        'schoolName': 'GPS Sector 21 Primary School',
-        'kitName': 'Foundational Numeracy & Math Abacus Kit',
-        'quantity': '5 Sets',
-        'date': 'Yesterday',
-        'status': 'Dispatched',
-      },
-      {
-        'id': 'kit_2',
-        'schoolId': 'school_3',
-        'schoolName': 'GPS Sector 14 Primary School',
-        'kitName': 'Gujarati Phonics & Sight Words Cards',
-        'quantity': '4 Sets',
-        'date': '3 days ago',
-        'status': 'Received',
-      },
-    ];
-
-    _mentorshipPairings = [
-      {
-        'mentorSchool': 'GPS Sector 7 Primary School (Grade A)',
-        'menteeSchool': 'GPS Sector 21 Primary School (Grade C)',
-        'focus': 'Foundational Arithmetic & Remedial Strategies',
-        'frequency': 'Bi-weekly peer classroom observation',
-      },
     ];
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -527,53 +492,82 @@ class _BrcDashboardState extends State<BrcDashboard> {
                     ),
                     const SizedBox(height: 12),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '${l10n?.statusLabel ?? (isGu ? "સ્થિતિ" : "Status")}: ${PerformanceClassification.getLocalizedLabel(context, level)}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
-                            color: AppColors.getPerformanceColor(level),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppColors.getPerformanceColor(level).withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '${l10n?.statusLabel ?? (isGu ? "સ્થિતિ" : "Status")}: ${PerformanceClassification.getLocalizedLabel(context, level)}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11.5,
+                              color: AppColors.getPerformanceColor(level),
+                            ),
                           ),
                         ),
-                        Wrap(
-                          spacing: 4,
-                          children: [
-                            TextButton.icon(
-                              onPressed: () {
-                                _showScheduleVisitDialog(context, school);
-                              },
-                              icon: const Icon(Icons.calendar_month_outlined, size: 15),
-                              label: Text(
-                                isGu ? 'મુલાકાત શેડ્યૂલ' : 'Schedule Visit',
-                                style: const TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            alignment: WrapAlignment.end,
+                            children: [
+                              OutlinedButton.icon(
+                                onPressed: () {
+                                  _showScheduleVisitDialog(context, school);
+                                },
+                                icon: const Icon(Icons.calendar_month_outlined, size: 14),
+                                label: Text(
+                                  isGu ? 'મુલાકાત શેડ્યૂલ' : 'Schedule Visit',
+                                  style: const TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.primary,
+                                  side: const BorderSide(color: AppColors.primary),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 ),
                               ),
-                            ),
-                            TextButton.icon(
-                              onPressed: () {
-                                _showSchoolAnalyticsModal(
-                                  context,
-                                  school,
-                                  avgScore,
-                                  coverage,
-                                  level,
-                                );
-                              },
-                              icon: const Icon(Icons.analytics_outlined, size: 15),
-                              label: Text(
-                                l10n?.viewAnalytics ?? (isGu ? 'વિશ્લેષણ જુઓ' : 'View Analytics'),
-                                style: const TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.bold,
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  _showSchoolAnalyticsModal(
+                                    context,
+                                    school,
+                                    avgScore,
+                                    coverage,
+                                    level,
+                                  );
+                                },
+                                icon: const Icon(Icons.analytics_outlined, size: 14),
+                                label: Text(
+                                  l10n?.viewAnalytics ?? (isGu ? 'વિશ્લેષણ જુઓ' : 'View Analytics'),
+                                  style: const TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -705,7 +699,9 @@ class _BrcDashboardState extends State<BrcDashboard> {
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              Row(
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 4,
                                 children: [
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -722,7 +718,6 @@ class _BrcDashboardState extends State<BrcDashboard> {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                     decoration: BoxDecoration(
@@ -1021,9 +1016,12 @@ class _BrcDashboardState extends State<BrcDashboard> {
                             Expanded(
                               child: OutlinedButton.icon(
                                 icon: const Icon(Icons.event_available_rounded, size: 16),
-                                label: Text(
-                                  isGu ? 'મુલાકાત શેડ્યૂલ કરો' : 'Schedule Visit',
-                                  style: const TextStyle(fontSize: 12),
+                                label: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    isGu ? 'મુલાકાત શેડ્યૂલ કરો' : 'Schedule Visit',
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
                                 ),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: AppColors.primary,
@@ -1040,9 +1038,12 @@ class _BrcDashboardState extends State<BrcDashboard> {
                             Expanded(
                               child: ElevatedButton.icon(
                                 icon: const Icon(Icons.check_rounded, size: 16),
-                                label: Text(
-                                  isGu ? 'પૂર્ણ' : 'Done',
-                                  style: const TextStyle(fontSize: 12),
+                                label: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    isGu ? 'પૂર્ણ' : 'Done',
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
                                 ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
@@ -1412,12 +1413,15 @@ class _BrcDashboardState extends State<BrcDashboard> {
                           const Icon(Icons.schedule_rounded,
                               size: 15, color: AppColors.primary),
                           const SizedBox(width: 6),
-                          Text(
-                            formattedDate,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
+                          Flexible(
+                            child: Text(
+                              formattedDate,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -2054,11 +2058,14 @@ class _BrcDashboardState extends State<BrcDashboard> {
                           flex: 2,
                           child: ElevatedButton.icon(
                             icon: const Icon(Icons.add_alarm_rounded, size: 18),
-                            label: Text(
-                              isGu ? 'શેડ્યૂલ અને રીમાઇન્ડર સાચવો' : 'Schedule & Set Reminder',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
+                            label: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                isGu ? 'શેડ્યૂલ અને રીમાઇન્ડર સાચવો' : 'Schedule & Set Reminder',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                             style: ElevatedButton.styleFrom(
