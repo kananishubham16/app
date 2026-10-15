@@ -720,12 +720,16 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  Localizations.localeOf(context).languageCode == 'gu' ? 'નિપુણતા મુજબ ક્રમાંકિત વિષયો' : 'Subjects Ranked by Mastery',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    Localizations.localeOf(context).languageCode == 'gu' ? 'નિપુણતા મુજબ ક્રમાંકિત વિષયો' : 'Subjects Ranked by Mastery',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                const SizedBox(width: 8),
                 Text(
                   Localizations.localeOf(context).languageCode == 'gu' ? 'ઓછાથી વધુ' : 'Lowest to Highest',
                   style: theme.textTheme.labelSmall?.copyWith(
@@ -2103,13 +2107,17 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            cls.displayName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                          Expanded(
+                            child: Text(
+                              cls.displayName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          const SizedBox(width: 8),
                           Text(
                             '${cls.learnersCount} ${isGu ? "વિદ્યાર્થીઓ મોનિટર" : "Learners Monitored"}',
                             style: const TextStyle(

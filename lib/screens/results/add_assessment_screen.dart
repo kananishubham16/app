@@ -431,6 +431,7 @@ class _AddAssessmentScreenState extends State<AddAssessmentScreen> {
             const SizedBox(height: 6),
             DropdownButtonFormField<String>(
               value: effectiveStudentId,
+              isExpanded: true,
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.person_outline_rounded),
                 hintText: 'Select Student',
@@ -438,7 +439,10 @@ class _AddAssessmentScreenState extends State<AddAssessmentScreen> {
               items: studentsList.map((s) {
                 return DropdownMenuItem<String>(
                   value: s.id,
-                  child: Text('${s.name} (${s.studentId})'),
+                  child: Text(
+                    '${s.name} (${s.studentId})',
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 );
               }).toList(),
               validator: (val) =>
@@ -452,12 +456,10 @@ class _AddAssessmentScreenState extends State<AddAssessmentScreen> {
             const SizedBox(height: 16),
 
             // Subject Selection & Assessment Type
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: Column(
+            LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxWidth < 340) {
+                  return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -469,27 +471,23 @@ class _AddAssessmentScreenState extends State<AddAssessmentScreen> {
                       const SizedBox(height: 6),
                       DropdownButtonFormField<String>(
                         value: effectiveSubjectId,
+                        isExpanded: true,
                         decoration: const InputDecoration(
                           prefixIcon: Icon(Icons.book_outlined),
                         ),
                         items: subjects.map((sub) {
                           return DropdownMenuItem<String>(
                             value: sub.id,
-                            child: Text(sub.getLocalizedName(context)),
+                            child: Text(
+                              sub.getLocalizedName(context),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           );
                         }).toList(),
                         validator: (val) => val == null ? 'Required' : null,
                         onChanged: _onSubjectChanged,
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 2,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                      const SizedBox(height: 12),
                       Text(
                         'Type',
                         style: theme.textTheme.titleSmall?.copyWith(
@@ -498,7 +496,7 @@ class _AddAssessmentScreenState extends State<AddAssessmentScreen> {
                       ),
                       const SizedBox(height: 6),
                       Container(
-                        height: 52,
+                        height: 48,
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
                           color: AppColors.surfaceVariant,
@@ -525,9 +523,91 @@ class _AddAssessmentScreenState extends State<AddAssessmentScreen> {
                         ),
                       ),
                     ],
-                  ),
-                ),
-              ],
+                  );
+                }
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Subject *',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          DropdownButtonFormField<String>(
+                            value: effectiveSubjectId,
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              prefixIcon: Icon(Icons.book_outlined),
+                            ),
+                            items: subjects.map((sub) {
+                              return DropdownMenuItem<String>(
+                                value: sub.id,
+                                child: Text(
+                                  sub.getLocalizedName(context),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              );
+                            }).toList(),
+                            validator: (val) => val == null ? 'Required' : null,
+                            onChanged: _onSubjectChanged,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Type',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            height: 52,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceVariant,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.dividerColor),
+                            ),
+                            alignment: Alignment.centerLeft,
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.assignment_outlined,
+                                  size: 18,
+                                  color: AppColors.primary,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Regular',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 16),
 
@@ -567,19 +647,18 @@ class _AddAssessmentScreenState extends State<AddAssessmentScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Expanded(
-                          child: Text(
-                            'Topic Scores Allocation',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                        Text(
+                          'Topic Scores Allocation',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -600,6 +679,7 @@ class _AddAssessmentScreenState extends State<AddAssessmentScreen> {
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 4),
                     Text(
                       'Enter obtained marks for each curriculum topic. Total marks will be dynamically computed.',
@@ -624,110 +704,214 @@ class _AddAssessmentScreenState extends State<AddAssessmentScreen> {
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12.0),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                flex: 4,
-                                child: Column(
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              if (constraints.maxWidth < 280) {
+                                return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       topic.name,
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                          ),
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                     Text(
                                       'Order #${topic.orderIndex}',
-                                      style: theme.textTheme.labelSmall
-                                          ?.copyWith(
-                                            color: AppColors.textSecondary,
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: TextFormField(
+                                            controller: obtainedCtrl,
+                                            keyboardType: TextInputType.number,
+                                            textAlign: TextAlign.center,
+                                            decoration: InputDecoration(
+                                              contentPadding: const EdgeInsets.symmetric(
+                                                vertical: 8,
+                                                horizontal: 6,
+                                              ),
+                                              hintText: 'Marks',
+                                              labelText: 'Score',
+                                              border: OutlineInputBorder(
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                            ),
+                                            validator: (val) {
+                                              if (val == null || val.trim().isEmpty) {
+                                                return 'Req';
+                                              }
+                                              final numVal = double.tryParse(val.trim());
+                                              if (numVal == null || numVal < 0) {
+                                                return 'Inv';
+                                              }
+                                              final maxVal =
+                                                  double.tryParse(
+                                                    totalCtrl?.text.trim() ?? '10',
+                                                  ) ??
+                                                  10.0;
+                                              if (numVal > maxVal) {
+                                                return '>$maxVal';
+                                              }
+                                              return null;
+                                            },
+                                            onChanged: (_) => setState(() {}),
                                           ),
+                                        ),
+                                        const Padding(
+                                          padding: EdgeInsets.symmetric(horizontal: 6),
+                                          child: Text(
+                                            '/',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: TextFormField(
+                                            controller: totalCtrl,
+                                            keyboardType: TextInputType.number,
+                                            textAlign: TextAlign.center,
+                                            decoration: InputDecoration(
+                                              contentPadding: const EdgeInsets.symmetric(
+                                                vertical: 8,
+                                                horizontal: 6,
+                                              ),
+                                              labelText: 'Total',
+                                              border: OutlineInputBorder(
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                            ),
+                                            validator: (val) {
+                                              if (val == null || val.trim().isEmpty) {
+                                                return 'Req';
+                                              }
+                                              final numVal = double.tryParse(val.trim());
+                                              if (numVal == null || numVal <= 0) {
+                                                return '>0';
+                                              }
+                                              return null;
+                                            },
+                                            onChanged: (_) => setState(() {}),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              // Obtained Marks Field
-                              Expanded(
-                                flex: 2,
-                                child: TextFormField(
-                                  controller: obtainedCtrl,
-                                  keyboardType: TextInputType.number,
-                                  textAlign: TextAlign.center,
-                                  decoration: InputDecoration(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 10,
-                                      horizontal: 8,
-                                    ),
-                                    hintText: 'Marks',
-                                    labelText: 'Score',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  validator: (val) {
-                                    if (val == null || val.trim().isEmpty) {
-                                      return 'Required';
-                                    }
-                                    final numVal = double.tryParse(val.trim());
-                                    if (numVal == null || numVal < 0) {
-                                      return 'Invalid';
-                                    }
-                                    final maxVal =
-                                        double.tryParse(
-                                          totalCtrl?.text.trim() ?? '10',
-                                        ) ??
-                                        10.0;
-                                    if (numVal > maxVal) {
-                                      return '>$maxVal';
-                                    }
-                                    return null;
-                                  },
-                                  onChanged: (_) => setState(() {}),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              const Text(
-                                '/',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              // Max Marks Field
-                              Expanded(
-                                flex: 2,
-                                child: TextFormField(
-                                  controller: totalCtrl,
-                                  keyboardType: TextInputType.number,
-                                  textAlign: TextAlign.center,
-                                  decoration: InputDecoration(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 10,
-                                      horizontal: 8,
-                                    ),
-                                    labelText: 'Total',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
+                                );
+                              }
+
+                              return Row(
+                                children: [
+                                  Expanded(
+                                    flex: 3,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          topic.name,
+                                          style: theme.textTheme.bodyMedium?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        Text(
+                                          'Order #${topic.orderIndex}',
+                                          style: theme.textTheme.labelSmall?.copyWith(
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  validator: (val) {
-                                    if (val == null || val.trim().isEmpty) {
-                                      return 'Req';
-                                    }
-                                    final numVal = double.tryParse(val.trim());
-                                    if (numVal == null || numVal <= 0) {
-                                      return '>0';
-                                    }
-                                    return null;
-                                  },
-                                  onChanged: (_) => setState(() {}),
-                                ),
-                              ),
-                            ],
+                                  const SizedBox(width: 8),
+                                  // Obtained Marks Field
+                                  SizedBox(
+                                    width: 65,
+                                    child: TextFormField(
+                                      controller: obtainedCtrl,
+                                      keyboardType: TextInputType.number,
+                                      textAlign: TextAlign.center,
+                                      decoration: InputDecoration(
+                                        contentPadding: const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                          horizontal: 4,
+                                        ),
+                                        hintText: 'Marks',
+                                        labelText: 'Score',
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      validator: (val) {
+                                        if (val == null || val.trim().isEmpty) {
+                                          return 'Req';
+                                        }
+                                        final numVal = double.tryParse(val.trim());
+                                        if (numVal == null || numVal < 0) {
+                                          return 'Inv';
+                                        }
+                                        final maxVal =
+                                            double.tryParse(
+                                              totalCtrl?.text.trim() ?? '10',
+                                            ) ??
+                                            10.0;
+                                        if (numVal > maxVal) {
+                                          return '>$maxVal';
+                                        }
+                                        return null;
+                                      },
+                                      onChanged: (_) => setState(() {}),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Text(
+                                    '/',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  // Max Marks Field
+                                  SizedBox(
+                                    width: 65,
+                                    child: TextFormField(
+                                      controller: totalCtrl,
+                                      keyboardType: TextInputType.number,
+                                      textAlign: TextAlign.center,
+                                      decoration: InputDecoration(
+                                        contentPadding: const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                          horizontal: 4,
+                                        ),
+                                        labelText: 'Total',
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      validator: (val) {
+                                        if (val == null || val.trim().isEmpty) {
+                                          return 'Req';
+                                        }
+                                        final numVal = double.tryParse(val.trim());
+                                        if (numVal == null || numVal <= 0) {
+                                          return '>0';
+                                        }
+                                        return null;
+                                      },
+                                      onChanged: (_) => setState(() {}),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
                           ),
                         );
                       }),
@@ -735,6 +919,7 @@ class _AddAssessmentScreenState extends State<AddAssessmentScreen> {
                 ),
               ),
             ),
+
             const SizedBox(height: 16),
 
             // Teacher Notes Field

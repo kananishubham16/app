@@ -342,6 +342,7 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
             const SizedBox(height: 6),
             DropdownButtonFormField<String>(
               value: effectiveStudentId,
+              isExpanded: true,
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.person_outline_rounded),
                 hintText: 'Select Student',
@@ -349,7 +350,10 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
               items: studentsList.map((s) {
                 return DropdownMenuItem<String>(
                   value: s.id,
-                  child: Text('${s.name} (${s.studentId})'),
+                  child: Text(
+                    '${s.name} (${s.studentId})',
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 );
               }).toList(),
               validator: (val) => val == null ? 'Required' : null,
@@ -371,13 +375,17 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
             const SizedBox(height: 6),
             DropdownButtonFormField<String>(
               value: effectiveSubjectId,
+              isExpanded: true,
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.book_outlined),
               ),
               items: subjects.map((sub) {
                 return DropdownMenuItem<String>(
                   value: sub.id,
-                  child: Text(sub.getLocalizedName(context)),
+                  child: Text(
+                    sub.getLocalizedName(context),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 );
               }).toList(),
               validator: (val) => val == null ? 'Required' : null,
@@ -400,6 +408,7 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
             const SizedBox(height: 6),
             DropdownButtonFormField<String>(
               value: effectiveTopicId,
+              isExpanded: true,
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.topic_outlined),
                 hintText: 'Select Topic',
@@ -407,7 +416,7 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
               items: topics.map((top) {
                 return DropdownMenuItem<String>(
                   value: top.id,
-                  child: Text(top.name),
+                  child: Text(top.name, overflow: TextOverflow.ellipsis),
                 );
               }).toList(),
               validator: (val) => val == null ? 'Required' : null,
@@ -429,6 +438,7 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
             const SizedBox(height: 6),
             DropdownButtonFormField<String>(
               value: effectivePresetActivity,
+              isExpanded: true,
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.psychology_outlined),
               ),

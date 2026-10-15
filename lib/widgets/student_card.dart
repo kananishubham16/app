@@ -130,11 +130,17 @@ class StudentCard extends StatelessWidget {
               // Optional Performance Indicator or Selection Mark
               if (effectiveLevel != null) ...[
                 const SizedBox(width: 8),
-                PerformanceIndicator(
-                  level: effectiveLevel,
-                  percentage: percentage,
-                  size: 12.0,
-                  showLabel: true,
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: PerformanceIndicator(
+                      level: effectiveLevel,
+                      percentage: percentage,
+                      size: 12.0,
+                      showLabel: true,
+                    ),
+                  ),
                 ),
               ],
 

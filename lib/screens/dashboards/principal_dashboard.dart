@@ -129,7 +129,9 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
                 mainAxisSpacing: 10,
                 childAspectRatio: constraints.maxWidth > 600
                     ? 1.4
-                    : (constraints.maxWidth < 360 ? 0.95 : 1.15),
+                    : (constraints.maxWidth < 360
+                        ? 0.92
+                        : (constraints.maxWidth < 420 ? 0.98 : 1.1)),
                 children: [
                   StatCard(
                     title: Localizations.localeOf(context).languageCode == 'gu' ? 'કુલ વિદ્યાર્થીઓ' : 'Total Students',
@@ -409,6 +411,7 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
     bool isHighlight = false,
   }) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
           icon,

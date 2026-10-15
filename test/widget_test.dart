@@ -37,6 +37,10 @@ import 'package:learning_setu/screens/performance/performance_screen.dart';
 import 'package:learning_setu/screens/remedial/remedial_screen.dart';
 import 'package:learning_setu/screens/profile/profile_screen.dart';
 import 'package:learning_setu/screens/profile/settings_screen.dart';
+import 'package:learning_setu/screens/results/add_assessment_screen.dart';
+import 'package:learning_setu/screens/remedial/assign_remedial_screen.dart';
+import 'package:learning_setu/screens/quizzes/quiz_result_screen.dart';
+
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -773,7 +777,39 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 500));
         expect(tester.takeException(), isNull, reason: 'SettingsScreen overflowed on $size');
+
+        // 8. Add Assessment Screen
+        await tester.pumpWidget(buildTestApp(const AddAssessmentScreen(studentId: 'student_1'), size));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(tester.takeException(), isNull, reason: 'AddAssessmentScreen overflowed on $size');
+
+        // 9. Assign Remedial Screen
+        await tester.pumpWidget(buildTestApp(const AssignRemedialScreen(studentId: 'student_1'), size));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(tester.takeException(), isNull, reason: 'AssignRemedialScreen overflowed on $size');
+
+        // 10. Quiz Result Screen
+        await tester.pumpWidget(buildTestApp(QuizResultScreen(
+          attempt: QuizAttempt(
+            id: 'attempt_1',
+            studentId: 'student_1',
+            subjectId: 'subject_math_3',
+            topicId: 'topic_addition',
+            date: DateTime.now(),
+            totalQuestions: 10,
+            correctAnswers: 8,
+            answers: const [],
+          ),
+          questions: const [],
+        ), size));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(tester.takeException(), isNull, reason: 'QuizResultScreen overflowed on $size');
       }
     });
   });
 }
+
+

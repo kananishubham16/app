@@ -540,7 +540,11 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
               itemCount: displayedSubjects.length,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: isWide ? 4 : 2,
-                childAspectRatio: isWide ? 1.4 : (constraints.maxWidth < 360 ? 0.95 : 1.1),
+                childAspectRatio: isWide
+                    ? 1.4
+                    : (constraints.maxWidth < 360
+                        ? 0.92
+                        : (constraints.maxWidth < 420 ? 0.98 : 1.1)),
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
               ),
@@ -797,8 +801,11 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          childAspectRatio: constraints.maxWidth > 600 ? 1.4 : (constraints.maxWidth < 360 ? 0.95 : 1.1),
+          childAspectRatio: constraints.maxWidth > 600
+              ? 1.4
+              : (constraints.maxWidth < 360
+                  ? 0.92
+                  : (constraints.maxWidth < 420 ? 0.98 : 1.1)),
           children: [
             StatCard(
               title: l10n?.studentsInClass ?? 'Students in Class',

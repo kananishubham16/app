@@ -1091,10 +1091,13 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              l10n?.recentAssessments ?? 'Recent Assessments',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+            Expanded(
+              child: Text(
+                l10n?.recentAssessments ?? 'Recent Assessments',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             TextButton(

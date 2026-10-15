@@ -201,8 +201,9 @@ class _BrcDashboardState extends State<BrcDashboard> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: constraints.maxWidth > 600 ? 1.4 : 1.15,
+                childAspectRatio: constraints.maxWidth > 600
+                    ? 1.4
+                    : (constraints.maxWidth < 360 ? 0.95 : 1.1),
                 children: [
                   StatCard(
                     title: l10n?.totalSchools ?? 'Total Schools',
@@ -1440,18 +1441,25 @@ class _BrcDashboardState extends State<BrcDashboard> {
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(color: Colors.amber.shade300),
                           ),
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width - 80,
+                          ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.flag_outlined,
                                   size: 13, color: Colors.amber.shade900),
                               const SizedBox(width: 4),
-                              Text(
-                                visit.purpose,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.amber.shade900,
+                              Flexible(
+                                child: Text(
+                                  visit.purpose,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.amber.shade900,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
@@ -1465,18 +1473,25 @@ class _BrcDashboardState extends State<BrcDashboard> {
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(color: Colors.purple.shade200),
                           ),
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width - 80,
+                          ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.notifications_active_outlined,
                                   size: 13, color: Colors.purple.shade700),
                               const SizedBox(width: 4),
-                              Text(
-                                visit.reminderTiming,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.purple.shade700,
+                              Flexible(
+                                child: Text(
+                                  visit.reminderTiming,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.purple.shade700,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],

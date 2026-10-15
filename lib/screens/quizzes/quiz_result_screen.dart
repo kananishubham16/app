@@ -140,9 +140,13 @@ class QuizResultScreen extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton.icon(
                       icon: const Icon(Icons.refresh_rounded, size: 18),
-                      label: Text(isGu ? 'ફરી ક્વિઝ આપો' : 'Retry Quiz'),
+                      label: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(isGu ? 'ફરી ક્વિઝ આપો' : 'Retry Quiz'),
+                      ),
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(0, 48),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
                       ),
                       onPressed: () {
                         Navigator.pushReplacementNamed(
@@ -168,12 +172,16 @@ class QuizResultScreen extends StatelessWidget {
                     },
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(0, 48),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                     ),
-                    child: Text(
-                      isGu ? 'વિદ્યાર્થી પર પાછા જાઓ' : 'Back to Student',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        isGu ? 'વિદ્યાર્થી પર પાછા જાઓ' : 'Back to Student',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 ),
