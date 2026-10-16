@@ -17,6 +17,7 @@ import 'package:learning_setu/widgets/section_header.dart';
 import 'package:learning_setu/widgets/loading_widget.dart';
 import 'package:learning_setu/widgets/empty_state_widget.dart';
 import 'package:learning_setu/widgets/percentage_bar.dart';
+import 'package:learning_setu/widgets/parent_review_box.dart';
 import 'package:learning_setu/l10n/app_localizations.dart';
 import 'package:learning_setu/app/theme.dart';
 
@@ -186,6 +187,31 @@ class _ParentDashboardState extends State<ParentDashboard> {
           ),
           const SizedBox(height: 8),
           _buildRecentResultsList(assessments),
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0, left: 4.0, right: 4.0),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.rate_review_outlined,
+                  size: 15,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    Localizations.localeOf(context).languageCode == 'gu'
+                        ? 'વિષય શિક્ષકને ગુણ બાબતે ખાનગી નોંધ મોકલવા માટે "વિષયો" ટેબ જુઓ.'
+                        : 'To send a private note on marks to a subject teacher, visit the "Subjects" tab.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 24),
         ],
       ),
@@ -725,7 +751,11 @@ class _ParentDashboardState extends State<ParentDashboard> {
   // ==========================================
   Widget _buildSubjectsTab() {
     final schoolProvider = context.watch<SchoolProvider>();
+    final studentProvider = context.watch<StudentProvider>();
     final subjects = schoolProvider.subjects;
+
+    final currentChild = studentProvider.selectedStudent ??
+        (studentProvider.students.isNotEmpty ? studentProvider.students.first : null);
 
     if (subjects.isEmpty) {
       return const EmptyStateWidget(
@@ -829,6 +859,16 @@ class _ParentDashboardState extends State<ParentDashboard> {
                       ],
                     ),
                   ),
+
+                  // Parent Review Box directly beneath student's marks display
+                  if (currentChild != null) ...[
+                    const SizedBox(height: 12),
+                    ParentReviewBox(
+                      studentId: currentChild.id,
+                      subjectId: subject.id,
+                      subjectName: subject.getLocalizedName(context),
+                    ),
+                  ],
                 ],
               ),
             ),

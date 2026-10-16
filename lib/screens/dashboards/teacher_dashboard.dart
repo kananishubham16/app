@@ -9,6 +9,8 @@ import 'package:learning_setu/providers/student_provider.dart';
 import 'package:learning_setu/providers/school_provider.dart';
 import 'package:learning_setu/providers/assessment_provider.dart';
 import 'package:learning_setu/providers/remedial_provider.dart';
+import 'package:learning_setu/providers/parent_review_provider.dart';
+import 'package:learning_setu/models/user_model.dart';
 import 'package:learning_setu/models/performance_model.dart';
 import 'package:learning_setu/models/school_model.dart';
 import 'package:learning_setu/models/student_model.dart';
@@ -1011,6 +1013,13 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
           final level = PerformanceClassification.classify(item.percentage);
           final levelColor = AppColors.getPerformanceColor(level);
 
+          final user = context.watch<AuthProvider>().currentUser;
+          final isAssignedSubjectTeacher = user?.role == UserRole.teacher &&
+              (user?.subjectIds?.contains(item.subjectId) ?? false);
+          final parentReview = isAssignedSubjectTeacher
+              ? context.watch<ParentReviewProvider>().getReview(item.studentId, item.subjectId)
+              : null;
+
           return ListTile(
             dense: true,
             leading: CircleAvatar(
@@ -1026,8 +1035,48 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
               student?.name ?? 'Student ${item.studentId}',
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
-            subtitle: Text(
-              '${item.subjectId.toUpperCase()} • ${dateFormat.format(item.date)}',
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${item.subjectId.toUpperCase()} • ${dateFormat.format(item.date)}',
+                ),
+                if (parentReview != null) ...[
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.purple.shade50,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: Colors.purple.shade200, width: 0.8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.family_restroom_rounded,
+                          size: 12,
+                          color: Colors.purple.shade700,
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            'Parent Note: “${parentReview.reviewText}”',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontStyle: FontStyle.italic,
+                              color: Colors.purple.shade900,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
             ),
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

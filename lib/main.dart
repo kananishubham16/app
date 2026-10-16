@@ -12,6 +12,7 @@ import 'package:learning_setu/providers/remedial_provider.dart';
 import 'package:learning_setu/providers/performance_provider.dart';
 import 'package:learning_setu/providers/school_provider.dart';
 import 'package:learning_setu/providers/locale_provider.dart';
+import 'package:learning_setu/providers/parent_review_provider.dart';
 
 import 'package:learning_setu/repositories/mock/mock_auth_repository.dart';
 import 'package:learning_setu/repositories/mock/mock_student_repository.dart';
@@ -94,6 +95,9 @@ class LearningSetu extends StatelessWidget {
           create: (_) => PerformanceProvider(performanceService),
         ),
         ChangeNotifierProvider(create: (_) => SchoolProvider(schoolRepo)),
+        ChangeNotifierProvider(
+          create: (_) => ParentReviewProvider(storageService),
+        ),
       ],
       child: Consumer<LocaleProvider>(
         builder: (context, localeProvider, _) {

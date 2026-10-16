@@ -20,6 +20,7 @@ import 'package:learning_setu/providers/student_provider.dart';
 import 'package:learning_setu/widgets/empty_state_widget.dart';
 import 'package:learning_setu/widgets/percentage_bar.dart';
 import 'package:learning_setu/widgets/performance_indicator.dart';
+import 'package:learning_setu/widgets/parent_review_box.dart';
 
 /// Detailed view for a specific subject, covering syllabus topics, learning objectives,
 /// topic-wise student performance, suggested remedial interventions, and quick quiz launching.
@@ -207,6 +208,12 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
 
             if (student != null) ...[
               _buildStudentContextCard(student, latestAssessment, subjectPerf),
+              const SizedBox(height: 12),
+              ParentReviewBox(
+                studentId: student.id,
+                subjectId: subject.id,
+                subjectName: subject.getLocalizedName(context),
+              ),
               const SizedBox(height: 16),
             ],
 

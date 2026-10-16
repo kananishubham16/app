@@ -6,3 +6,4 @@ export 'quiz_provider.dart';
 export 'remedial_provider.dart';
 export 'school_provider.dart';
 export 'student_provider.dart';
+export 'parent_review_provider.dart';

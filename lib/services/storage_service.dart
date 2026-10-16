@@ -4,11 +4,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:learning_setu/models/assessment_model.dart';
 import 'package:learning_setu/models/quiz_model.dart';
 import 'package:learning_setu/models/remedial_model.dart';
+import 'package:learning_setu/models/parent_review_model.dart';
 
 class StorageService {
   static const String _assessmentsKey = 'local_assessments';
   static const String _quizAttemptsKey = 'local_quiz_attempts';
   static const String _remedialsKey = 'local_remedials';
+  static const String _parentReviewsKey = 'local_parent_reviews';
   static const String _currentUserKey = 'current_user';
 
   // Save assessments
@@ -62,6 +64,23 @@ class StorageService {
         .toList();
   }
 
+  // Save parent reviews
+  Future<void> saveParentReviews(List<ParentReviewModel> reviews) async {
+    final prefs = await SharedPreferences.getInstance();
+    final json = reviews.map((r) => r.toJson()).toList();
+    await prefs.setString(_parentReviewsKey, jsonEncode(json));
+  }
+
+  Future<List<ParentReviewModel>> loadParentReviews() async {
+    final prefs = await SharedPreferences.getInstance();
+    final str = prefs.getString(_parentReviewsKey);
+    if (str == null) return [];
+    final list = jsonDecode(str) as List;
+    return list
+        .map((j) => ParentReviewModel.fromJson(j as Map<String, dynamic>))
+        .toList();
+  }
+
   // Save current user ID
   Future<void> saveCurrentUser(String? userId) async {
     final prefs = await SharedPreferences.getInstance();
@@ -83,6 +102,7 @@ class StorageService {
     await prefs.remove(_assessmentsKey);
     await prefs.remove(_quizAttemptsKey);
     await prefs.remove(_remedialsKey);
+    await prefs.remove(_parentReviewsKey);
     await prefs.remove(_currentUserKey);
   }
 }

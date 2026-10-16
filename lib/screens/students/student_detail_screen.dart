@@ -20,6 +20,7 @@ import 'package:learning_setu/widgets/error_widget.dart';
 import 'package:learning_setu/widgets/loading_widget.dart';
 import 'package:learning_setu/widgets/percentage_bar.dart';
 import 'package:learning_setu/widgets/performance_indicator.dart';
+import 'package:learning_setu/widgets/parent_review_box.dart';
 
 /// Screen displaying in-depth details of a specific student,
 /// including demographics, subject performance overview, learning gap groups,
@@ -705,6 +706,13 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                         percentage: subj.latestPercentage ?? 0,
                         level: subj.level,
                         height: 6,
+                      ),
+                      // Parent review box (strictly visible only to assigned subject teacher)
+                      ParentReviewBox(
+                        studentId: student.id,
+                        subjectId: subj.subjectId,
+                        subjectName: subj.subjectName,
+                        compact: true,
                       ),
                     ],
                   ),

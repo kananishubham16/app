@@ -6,3 +6,4 @@ export 'school_model.dart';
 export 'student_model.dart';
 export 'subject_model.dart';
 export 'user_model.dart';
+export 'parent_review_model.dart';

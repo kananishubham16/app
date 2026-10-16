@@ -24,6 +24,7 @@ import 'package:learning_setu/providers/student_provider.dart';
 import 'package:learning_setu/providers/school_provider.dart';
 import 'package:learning_setu/providers/remedial_provider.dart';
 import 'package:learning_setu/providers/performance_provider.dart';
+import 'package:learning_setu/providers/parent_review_provider.dart';
 import 'package:learning_setu/repositories/mock/mock_student_repository.dart';
 import 'package:learning_setu/repositories/mock/mock_remedial_repository.dart';
 import 'package:learning_setu/screens/dashboards/teacher_dashboard.dart';
@@ -631,6 +632,7 @@ void main() {
             ChangeNotifierProvider(create: (_) => QuizProvider(mockQuizRepo, storage)),
             ChangeNotifierProvider(create: (_) => RemedialProvider(mockRemedialRepo, storage)),
             ChangeNotifierProvider(create: (_) => PerformanceProvider(perfService)),
+            ChangeNotifierProvider(create: (_) => ParentReviewProvider(storage)),
           ],
           child: MaterialApp(
             locale: const Locale('gu'),
@@ -718,6 +720,7 @@ void main() {
               prov.loadPerformance('student_1');
               return prov;
             }),
+            ChangeNotifierProvider(create: (_) => ParentReviewProvider(storage)),
           ],
           child: MaterialApp(
             locale: const Locale('gu'),
