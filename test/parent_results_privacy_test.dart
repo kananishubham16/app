@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:learning_setu/l10n/app_localizations.dart';
-import 'package:learning_setu/mock_data/mock_data.dart';
 import 'package:learning_setu/models/models.dart';
 import 'package:learning_setu/providers/assessment_provider.dart';
 import 'package:learning_setu/providers/auth_provider.dart';

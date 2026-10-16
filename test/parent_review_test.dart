@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:learning_setu/l10n/app_localizations.dart';
 import 'package:learning_setu/models/models.dart';
 import 'package:learning_setu/providers/auth_provider.dart';
 import 'package:learning_setu/providers/parent_review_provider.dart';
@@ -73,43 +74,47 @@ void main() {
     });
   });
 
-  group('ParentReviewBox Privacy & Role Enforcement Widget Tests', () {
-    Widget buildTestWidget({
-      required UserRole role,
-      String? userId,
-      required String studentId,
-      required String subjectId,
-      required String subjectName,
-      required ParentReviewProvider reviewProv,
-    }) {
-      final authRepo = MockAuthRepository();
-      final storageService = StorageService();
+  Widget buildTestWidget({
+    required UserRole role,
+    String? userId,
+    required String studentId,
+    required String subjectId,
+    required String subjectName,
+    required ParentReviewProvider reviewProv,
+    Locale? locale,
+  }) {
+    final authRepo = MockAuthRepository();
+    final storageService = StorageService();
 
-      return MultiProvider(
-        providers: [
-          ChangeNotifierProvider<AuthProvider>(
-            create: (_) {
-              final auth = AuthProvider(authRepo, storageService);
-              auth.demoLogin(role, userId: userId);
-              return auth;
-            },
-          ),
-          ChangeNotifierProvider<ParentReviewProvider>.value(value: reviewProv),
-        ],
-        child: MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: ParentReviewBox(
-                studentId: studentId,
-                subjectId: subjectId,
-                subjectName: subjectName,
-              ),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<AuthProvider>(
+          create: (_) {
+            final auth = AuthProvider(authRepo, storageService);
+            auth.demoLogin(role, userId: userId);
+            return auth;
+          },
+        ),
+        ChangeNotifierProvider<ParentReviewProvider>.value(value: reviewProv),
+      ],
+      child: MaterialApp(
+        locale: locale ?? const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: ParentReviewBox(
+              studentId: studentId,
+              subjectId: subjectId,
+              subjectName: subjectName,
             ),
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
+  group('ParentReviewBox Privacy & Role Enforcement Widget Tests', () {
     testWidgets('Parent can view review box and write/submit a review',
         (tester) async {
       final storage = StorageService();
@@ -256,6 +261,135 @@ void main() {
       // Confidential: Nothing rendered
       expect(find.textContaining("Parent's Review"), findsNothing);
       expect(find.textContaining('Aarav is practicing'), findsNothing);
+    });
+  });
+
+  group('ParentReviewBox Responsive Mobile Viewport Stress Tests', () {
+    testWidgets('Teacher section: 320px screen width in Gujarati has zero layout overflows',
+        (tester) async {
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final storage = StorageService();
+      final reviewProv = ParentReviewProvider(storage);
+      await reviewProv.loadReviews();
+
+      await tester.pumpWidget(
+        buildTestWidget(
+          role: UserRole.teacher,
+          userId: 'user_teacher',
+          studentId: 'student_1',
+          subjectId: 'subject_math',
+          subjectName: 'ગણિત',
+          reviewProv: reviewProv,
+          locale: const Locale('gu'),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(ParentReviewBox), findsOneWidget);
+      expect(find.text('સ્વીકારેલ છે'), findsOneWidget);
+    });
+
+    testWidgets('Teacher section: 360px screen width in Gujarati has zero layout overflows',
+        (tester) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final storage = StorageService();
+      final reviewProv = ParentReviewProvider(storage);
+      await reviewProv.loadReviews();
+
+      await tester.pumpWidget(
+        buildTestWidget(
+          role: UserRole.teacher,
+          userId: 'user_teacher',
+          studentId: 'student_1',
+          subjectId: 'subject_math',
+          subjectName: 'ગણિત',
+          reviewProv: reviewProv,
+          locale: const Locale('gu'),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(ParentReviewBox), findsOneWidget);
+    });
+
+    testWidgets('Parents section: existing review on 320px in Gujarati has zero layout overflows',
+        (tester) async {
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final storage = StorageService();
+      final reviewProv = ParentReviewProvider(storage);
+      await reviewProv.loadReviews();
+
+      // student_1, subject_math has an acknowledged review
+      await tester.pumpWidget(
+        buildTestWidget(
+          role: UserRole.parent,
+          studentId: 'student_1',
+          subjectId: 'subject_math',
+          subjectName: 'ગણિત',
+          reviewProv: reviewProv,
+          locale: const Locale('gu'),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(ParentReviewBox), findsOneWidget);
+      expect(find.text('શિક્ષક દ્વારા વાંચેલ'), findsOneWidget);
+    });
+
+    testWidgets('Parents section: writing mode on 320px in Gujarati has zero layout overflows',
+        (tester) async {
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final storage = StorageService();
+      final reviewProv = ParentReviewProvider(storage);
+      await reviewProv.loadReviews();
+
+      // student_5, subject_eng has no initial review
+      await tester.pumpWidget(
+        buildTestWidget(
+          role: UserRole.parent,
+          studentId: 'student_5',
+          subjectId: 'subject_eng',
+          subjectName: 'અંગ્રેજી',
+          reviewProv: reviewProv,
+          locale: const Locale('gu'),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(ParentReviewBox), findsOneWidget);
+      expect(find.text('પ્રતિભાવ મોકલો'), findsOneWidget);
     });
   });
 }

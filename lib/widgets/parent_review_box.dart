@@ -178,66 +178,81 @@ class _ParentReviewBoxState extends State<ParentReviewBox> {
               ),
               const SizedBox(height: 10),
               // Footer: Date and Acknowledgement status
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Confidentiality label
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.lock_outline_rounded,
-                        size: 13,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        isGu
-                            ? 'ફક્ત ${widget.subjectName} શિક્ષક જ જોઈ શકે છે'
-                            : 'Only ${widget.subjectName} teacher can see this',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                  // Acknowledgement tag
-                  if (review.isAcknowledged)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Colors.green.shade200),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.check_circle_rounded,
-                            size: 13,
-                            color: Colors.green.shade700,
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return SizedBox(
+                    width: double.infinity,
+                    child: Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: [
+                        // Confidentiality label
+                        ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: constraints.maxWidth),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.lock_outline_rounded,
+                                size: 13,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  isGu
+                                      ? 'ફક્ત ${widget.subjectName} શિક્ષક જ જોઈ શકે છે'
+                                      : 'Only ${widget.subjectName} teacher can see this',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            isGu
-                                ? 'શિક્ષક દ્વારા વાંચેલ'
-                                : 'Read by ${review.acknowledgedBy ?? "Teacher"}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green.shade800,
+                        ),
+                        // Acknowledgement tag
+                        if (review.isAcknowledged)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade50,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.green.shade200),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.check_circle_rounded,
+                                  size: 13,
+                                  color: Colors.green.shade700,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  isGu
+                                      ? 'શિક્ષક દ્વારા વાંચેલ'
+                                      : 'Read by ${review.acknowledgedBy ?? "Teacher"}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green.shade800,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
+                      ],
                     ),
-                ],
+                  );
+                },
               ),
             ],
           ),
@@ -346,66 +361,69 @@ class _ParentReviewBoxState extends State<ParentReviewBox> {
                   return null;
                 },
               ),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if (_isEditing) ...[
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _isEditing = false;
-                        });
-                      },
-                      child: Text(isGu ? 'રદ કરો' : 'Cancel'),
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                  FilledButton.icon(
-                    icon: const Icon(Icons.send_rounded, size: 15),
-                    label: Text(
-                      isGu
-                          ? (_isEditing ? 'અપડેટ કરો' : 'પ્રતિભાવ મોકલો')
-                          : (_isEditing ? 'Update Review' : 'Submit Review'),
-                    ),
-                    style: FilledButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: () async {
-                      if (_formKey.currentState?.validate() ?? false) {
-                        final text = _textController.text.trim();
-                        final parentName = user?.name ??
-                            (isGu ? 'વાલી' : 'Parent');
-
-                        await reviewProv.submitOrUpdateReview(
-                          studentId: widget.studentId,
-                          subjectId: widget.subjectId,
-                          parentName: parentName,
-                          reviewText: text,
-                        );
-
-                        if (context.mounted) {
+              SizedBox(
+                width: double.infinity,
+                child: Wrap(
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if (_isEditing)
+                      TextButton(
+                        onPressed: () {
                           setState(() {
                             _isEditing = false;
                           });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                isGu
-                                    ? 'પ્રતિભાવ સફળતાપૂર્વક મોકલાયો! ફક્ત ${widget.subjectName} શિક્ષક જ જોઈ શકશે.'
-                                    : 'Review sent! Only ${widget.subjectName} teacher can view this.',
-                              ),
-                              behavior: SnackBarBehavior.floating,
-                            ),
+                        },
+                        child: Text(isGu ? 'રદ કરો' : 'Cancel'),
+                      ),
+                    FilledButton.icon(
+                      icon: const Icon(Icons.send_rounded, size: 15),
+                      label: Text(
+                        isGu
+                            ? (_isEditing ? 'અપડેટ કરો' : 'પ્રતિભાવ મોકલો')
+                            : (_isEditing ? 'Update Review' : 'Submit Review'),
+                      ),
+                      style: FilledButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: () async {
+                        if (_formKey.currentState?.validate() ?? false) {
+                          final text = _textController.text.trim();
+                          final parentName = user?.name ??
+                              (isGu ? 'વાલી' : 'Parent');
+
+                          await reviewProv.submitOrUpdateReview(
+                            studentId: widget.studentId,
+                            subjectId: widget.subjectId,
+                            parentName: parentName,
+                            reviewText: text,
                           );
+
+                          if (context.mounted) {
+                            setState(() {
+                              _isEditing = false;
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  isGu
+                                      ? 'પ્રતિભાવ સફળતાપૂર્વક મોકલાયો! ફક્ત ${widget.subjectName} શિક્ષક જ જોઈ શકશે.'
+                                      : 'Review sent! Only ${widget.subjectName} teacher can view this.',
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
                         }
-                      }
-                    },
-                  ),
-                ],
+                      },
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -520,6 +538,8 @@ class _ParentReviewBoxState extends State<ParentReviewBox> {
                           fontSize: 11,
                           color: Colors.purple.shade700,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -577,60 +597,73 @@ class _ParentReviewBoxState extends State<ParentReviewBox> {
             ),
             const SizedBox(height: 10),
             // Footer: Teacher Acknowledge Button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  isGu
-                      ? 'વિદ્યાર્થીના ગુણ અને પ્રગતિ પર વાલીનો પ્રતિભાવ'
-                      : 'Feedback on student performance & marks',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: theme.colorScheme.onSurfaceVariant,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return SizedBox(
+                  width: double.infinity,
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: constraints.maxWidth),
+                        child: Text(
+                          isGu
+                              ? 'વિદ્યાર્થીના ગુણ અને પ્રગતિ પર વાલીનો પ્રતિભાવ'
+                              : 'Feedback on student performance & marks',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          final teacherName = user?.name ?? 'Teacher';
+                          reviewProv.toggleAcknowledge(review.id, teacherName);
+                        },
+                        icon: Icon(
+                          review.isAcknowledged
+                              ? Icons.check_circle_rounded
+                              : Icons.check_circle_outline_rounded,
+                          size: 15,
+                          color: review.isAcknowledged
+                              ? Colors.green.shade700
+                              : theme.colorScheme.primary,
+                        ),
+                        label: Text(
+                          review.isAcknowledged
+                              ? (isGu ? 'સ્વીકારેલ છે' : 'Acknowledged')
+                              : (isGu ? 'વાંચ્યું / સ્વીકારો' : 'Acknowledge'),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: review.isAcknowledged
+                                ? Colors.green.shade800
+                                : theme.colorScheme.primary,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          backgroundColor: review.isAcknowledged
+                              ? Colors.green.shade50
+                              : Colors.transparent,
+                          side: BorderSide(
+                            color: review.isAcknowledged
+                                ? Colors.green.shade300
+                                : theme.colorScheme.primary.withOpacity(0.5),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    final teacherName = user?.name ?? 'Teacher';
-                    reviewProv.toggleAcknowledge(review.id, teacherName);
-                  },
-                  icon: Icon(
-                    review.isAcknowledged
-                        ? Icons.check_circle_rounded
-                        : Icons.check_circle_outline_rounded,
-                    size: 15,
-                    color: review.isAcknowledged
-                        ? Colors.green.shade700
-                        : theme.colorScheme.primary,
-                  ),
-                  label: Text(
-                    review.isAcknowledged
-                        ? (isGu ? 'સ્વીકારેલ છે' : 'Acknowledged')
-                        : (isGu ? 'વાંચ્યું / સ્વીકારો' : 'Acknowledge'),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: review.isAcknowledged
-                          ? Colors.green.shade800
-                          : theme.colorScheme.primary,
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    backgroundColor: review.isAcknowledged
-                        ? Colors.green.shade50
-                        : Colors.transparent,
-                    side: BorderSide(
-                      color: review.isAcknowledged
-                          ? Colors.green.shade300
-                          : theme.colorScheme.primary.withOpacity(0.5),
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ],
+                );
+              },
             ),
           ],
         ),
