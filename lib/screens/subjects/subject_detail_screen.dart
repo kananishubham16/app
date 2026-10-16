@@ -17,6 +17,8 @@ import 'package:learning_setu/providers/performance_provider.dart';
 import 'package:learning_setu/providers/remedial_provider.dart';
 import 'package:learning_setu/providers/school_provider.dart';
 import 'package:learning_setu/providers/student_provider.dart';
+import 'package:learning_setu/mock_data/mock_data.dart';
+import 'package:learning_setu/widgets/assigned_teacher_badge.dart';
 import 'package:learning_setu/widgets/empty_state_widget.dart';
 import 'package:learning_setu/widgets/percentage_bar.dart';
 import 'package:learning_setu/widgets/performance_indicator.dart';
@@ -252,6 +254,11 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
   Widget _buildSubjectHeader(SubjectModel subject) {
     final theme = Theme.of(context);
     final iconData = _getSubjectIcon(subject.iconName);
+    final user = context.watch<AuthProvider>().currentUser;
+    final assignedTeacher = MockData.getTeacherForSubject(
+      subjectId: subject.id,
+      schoolId: user?.schoolId,
+    );
 
     return Card(
       elevation: 1,
@@ -311,6 +318,16 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
                       ),
                     ),
                   ),
+                  if (user?.role == UserRole.principal && assignedTeacher != null) ...[
+                    const SizedBox(height: 8),
+                    AssignedTeacherBadge(
+                      teacher: assignedTeacher,
+                      labelPrefix: Localizations.localeOf(context).languageCode == 'gu'
+                          ? 'વિષય શિક્ષક'
+                          : 'Subject Teacher',
+                      showPhone: true,
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -326,10 +343,17 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
     SubjectPerformance? subjectPerf,
   ) {
     final theme = Theme.of(context);
+    final isGu = Localizations.localeOf(context).languageCode == 'gu';
     final level = subjectPerf?.level ?? PerformanceLevel.notAssessed;
     final dateStr = latestAssessment != null
         ? DateFormat('dd MMM yyyy').format(latestAssessment.date)
-        : (Localizations.localeOf(context).languageCode == 'gu' ? 'કંઈ નોંધાયેલ નથી' : 'None recorded');
+        : (isGu ? 'કંઈ નોંધાયેલ નથી' : 'None recorded');
+    final user = context.watch<AuthProvider>().currentUser;
+    final assignedTeacher = MockData.getTeacherForSubject(
+      subjectId: widget.subjectId ?? (widget.subject?.id ?? 'subject_math'),
+      classId: student.classId,
+      schoolId: student.schoolId,
+    );
 
     return Card(
       elevation: 0.5,
@@ -366,6 +390,14 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
               ],
             ),
             const Divider(height: 18),
+            if (user?.role == UserRole.principal && assignedTeacher != null) ...[
+              AssignedTeacherBadge(
+                teacher: assignedTeacher,
+                labelPrefix: isGu ? 'સોંપાયેલ વિષય શિક્ષક' : 'Assigned Subject Teacher',
+                showPhone: true,
+              ),
+              const SizedBox(height: 10),
+            ],
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

@@ -181,6 +181,50 @@ class MockData {
       avatarInitials: 'RS',
     ),
     const UserModel(
+      id: 'user_teacher_s2_3',
+      name: 'Kavita Patel',
+      email: 'teacher.kavita@demo.com',
+      phone: '+91 98796 67098',
+      role: UserRole.teacher,
+      schoolId: 'school_2',
+      classIds: ['class_3a_s2'],
+      subjectIds: ['subject_math', 'subject_guj'],
+      avatarInitials: 'KP',
+    ),
+    const UserModel(
+      id: 'user_teacher_s2_4',
+      name: 'Deepak Shah',
+      email: 'teacher.deepak@demo.com',
+      phone: '+91 98796 67099',
+      role: UserRole.teacher,
+      schoolId: 'school_2',
+      classIds: ['class_4a_s2'],
+      subjectIds: ['subject_eng', 'subject_evs'],
+      avatarInitials: 'DS',
+    ),
+    const UserModel(
+      id: 'user_teacher_s3_3',
+      name: 'Pooja Dave',
+      email: 'teacher.pooja@demo.com',
+      phone: '+91 98796 67100',
+      role: UserRole.teacher,
+      schoolId: 'school_3',
+      classIds: ['class_3a_s3'],
+      subjectIds: ['subject_math', 'subject_guj'],
+      avatarInitials: 'PD',
+    ),
+    const UserModel(
+      id: 'user_teacher_s3_4',
+      name: 'Hitesh Prajapati',
+      email: 'teacher.hitesh@demo.com',
+      phone: '+91 98796 67101',
+      role: UserRole.teacher,
+      schoolId: 'school_3',
+      classIds: ['class_4a_s3'],
+      subjectIds: ['subject_eng', 'subject_evs'],
+      avatarInitials: 'HP',
+    ),
+    const UserModel(
       id: 'user_principal',
       name: 'Rajesh Patel',
       email: 'principal@demo.com',
@@ -3966,5 +4010,64 @@ class MockData {
       'notAssessedCount': notAssessed,
       'averagePercentage': avgPercentage,
     };
+  }
+
+  // Teacher Assignments
+  static UserModel? getTeacherForSubject({
+    required String subjectId,
+    String? classId,
+    String? schoolId,
+  }) {
+    final teachers = demoUsers.where((u) => u.role == UserRole.teacher);
+
+    // 1. First try: Match both subject and class
+    if (classId != null) {
+      final classMatch = teachers.where((t) =>
+          (t.subjectIds?.contains(subjectId) ?? false) &&
+          (t.classIds?.contains(classId) ?? false)).firstOrNull;
+      if (classMatch != null) return classMatch;
+    }
+
+    // 2. Second try: Match subject and school
+    if (schoolId != null) {
+      final schoolMatch = teachers.where((t) =>
+          (t.subjectIds?.contains(subjectId) ?? false) &&
+          t.schoolId == schoolId).firstOrNull;
+      if (schoolMatch != null) return schoolMatch;
+    }
+
+    // 3. Third try: Any teacher teaching that subject
+    final subjectMatch = teachers.where((t) =>
+        t.subjectIds?.contains(subjectId) ?? false).firstOrNull;
+    if (subjectMatch != null) return subjectMatch;
+
+    // 4. Fallback: School teacher or first available teacher
+    return teachers.where((t) => schoolId == null || t.schoolId == schoolId).firstOrNull ?? teachers.firstOrNull;
+  }
+
+  static UserModel? getClassTeacher(String classId) {
+    final cls = classes.where((c) => c.id == classId).firstOrNull;
+    if (cls != null && cls.teacherId != null) {
+      final teacher = getUserById(cls.teacherId!);
+      if (teacher != null) return teacher;
+    }
+    return demoUsers.where((u) =>
+        u.role == UserRole.teacher &&
+        (u.classIds?.contains(classId) ?? false)).firstOrNull;
+  }
+
+  static UserModel? getTeacherForStudent({
+    required StudentModel student,
+    String? subjectId,
+  }) {
+    if (subjectId != null) {
+      final subjectTeacher = getTeacherForSubject(
+        subjectId: subjectId,
+        classId: student.classId,
+        schoolId: student.schoolId,
+      );
+      if (subjectTeacher != null) return subjectTeacher;
+    }
+    return getClassTeacher(student.classId);
   }
 }

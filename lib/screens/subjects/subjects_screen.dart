@@ -12,6 +12,8 @@ import 'package:learning_setu/providers/auth_provider.dart';
 import 'package:learning_setu/providers/performance_provider.dart';
 import 'package:learning_setu/providers/school_provider.dart';
 import 'package:learning_setu/providers/student_provider.dart';
+import 'package:learning_setu/mock_data/mock_data.dart';
+import 'package:learning_setu/widgets/assigned_teacher_badge.dart';
 import 'package:learning_setu/widgets/empty_state_widget.dart';
 import 'package:learning_setu/widgets/error_widget.dart';
 import 'package:learning_setu/widgets/loading_widget.dart';
@@ -37,13 +39,16 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_initialized) {
-      final studentProv = context.read<StudentProvider>();
-      final uniqueStudents = <String, StudentModel>{for (var s in studentProv.students) s.id: s}.values.toList();
-      if (studentProv.selectedStudent != null && !uniqueStudents.any((s) => s.id == studentProv.selectedStudent!.id)) {
-        studentProv.selectStudent(null);
-      }
-      _loadData();
       _initialized = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final studentProv = context.read<StudentProvider>();
+        final uniqueStudents = <String, StudentModel>{for (var s in studentProv.students) s.id: s}.values.toList();
+        if (studentProv.selectedStudent != null && !uniqueStudents.any((s) => s.id == studentProv.selectedStudent!.id)) {
+          studentProv.selectStudent(null);
+        }
+        _loadData();
+      });
     }
   }
 
@@ -709,6 +714,12 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
     final double? score = performance?.latestPercentage;
     final PerformanceLevel level =
         performance?.level ?? PerformanceLevel.notAssessed;
+    final user = context.watch<AuthProvider>().currentUser;
+    final assignedTeacher = MockData.getTeacherForSubject(
+      subjectId: subject.id,
+      classId: selectedStudent?.classId,
+      schoolId: user?.schoolId,
+    );
 
     return Card(
       elevation: 1,
@@ -806,6 +817,16 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
+              if (user?.role == UserRole.principal && assignedTeacher != null) ...[
+                const SizedBox(height: 8),
+                AssignedTeacherBadge(
+                  teacher: assignedTeacher,
+                  labelPrefix: Localizations.localeOf(context).languageCode == 'gu'
+                      ? 'સોંપાયેલ શિક્ષક'
+                      : 'Assigned Teacher',
+                  showPhone: true,
+                ),
+              ],
               const SizedBox(height: 10),
               if (hasStudent && score != null) ...[
                 PercentageBar(

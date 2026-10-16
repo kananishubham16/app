@@ -12,6 +12,8 @@ import 'package:learning_setu/models/remedial_model.dart';
 import 'package:learning_setu/widgets/stat_card.dart';
 import 'package:learning_setu/widgets/section_header.dart';
 import 'package:learning_setu/widgets/loading_widget.dart';
+import 'package:learning_setu/mock_data/mock_data.dart';
+import 'package:learning_setu/widgets/assigned_teacher_badge.dart';
 import 'package:learning_setu/widgets/empty_state_widget.dart';
 import 'package:learning_setu/widgets/percentage_bar.dart';
 import 'package:learning_setu/l10n/app_localizations.dart';
@@ -453,6 +455,7 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
         // Mock realistic average score per class
         final avgScore = cls.name.contains('3') ? 66.8 : 72.4;
         final level = PerformanceClassification.classify(avgScore);
+        final classTeacher = MockData.getClassTeacher(cls.id);
 
         return Card(
           margin: const EdgeInsets.only(bottom: 10),
@@ -507,6 +510,34 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
+                              if (classTeacher != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2.0),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.badge_outlined,
+                                        size: 12,
+                                        color: Colors.indigo.shade700,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(
+                                          Localizations.localeOf(context).languageCode == 'gu'
+                                              ? 'વર્ગ શિક્ષક: ${classTeacher.name}'
+                                              : 'Class Teacher: ${classTeacher.name}',
+                                          style: TextStyle(
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.indigo.shade800,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                             ],
                           ),
                         ),
@@ -599,6 +630,8 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
   // TAB 2: SUBJECTS TAB
   // ==========================================
   Widget _buildSubjectsTab() {
+    final auth = context.watch<AuthProvider>();
+    final user = auth.currentUser;
     final schoolProvider = context.watch<SchoolProvider>();
     final subjects = schoolProvider.subjects;
 
@@ -623,6 +656,10 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
           final isScience = subject.name.toLowerCase().contains('science');
           final score = isMath ? 61.2 : (isScience ? 69.5 : 74.0);
           final level = PerformanceClassification.classify(score);
+          final assignedTeacher = MockData.getTeacherForSubject(
+            subjectId: subject.id,
+            schoolId: user?.schoolId,
+          );
 
           return Card(
             elevation: 1,
@@ -701,6 +738,16 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
                     level: level,
                     height: 8,
                   ),
+                  if (assignedTeacher != null) ...[
+                    const SizedBox(height: 10),
+                    AssignedTeacherBadge(
+                      teacher: assignedTeacher,
+                      labelPrefix: Localizations.localeOf(context).languageCode == 'gu'
+                          ? 'વિષય શિક્ષક'
+                          : 'Subject Teacher',
+                      showPhone: true,
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,

@@ -21,6 +21,8 @@ import 'package:learning_setu/widgets/loading_widget.dart';
 import 'package:learning_setu/widgets/percentage_bar.dart';
 import 'package:learning_setu/widgets/performance_indicator.dart';
 import 'package:learning_setu/widgets/parent_review_box.dart';
+import 'package:learning_setu/mock_data/mock_data.dart';
+import 'package:learning_setu/widgets/assigned_teacher_badge.dart';
 
 /// Screen displaying in-depth details of a specific student,
 /// including demographics, subject performance overview, learning gap groups,
@@ -177,6 +179,10 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
 
   Widget _buildStudentInfoCard(StudentModel student) {
     final theme = Theme.of(context);
+    final auth = context.watch<AuthProvider>();
+    final user = auth.currentUser;
+    final isPrincipal = user?.role == UserRole.principal;
+    final classTeacher = MockData.getClassTeacher(student.classId);
 
     final isGu = Localizations.localeOf(context).languageCode == 'gu';
 
@@ -256,52 +262,86 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
             ),
             if (student.parentName != null) ...[
               const Divider(height: 24),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.family_restroom_rounded,
-                    size: 18,
-                    color: AppColors.secondary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    isGu ? 'વાલી: ' : 'Parent: ',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(student.parentName!, style: theme.textTheme.bodySmall),
-                  const Spacer(),
-                  if (student.parentPhone != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.secondaryContainer.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.phone_rounded,
-                            size: 14,
-                            color: AppColors.secondary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            student.parentPhone!,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: AppColors.onSecondaryContainer,
-                              fontWeight: FontWeight.w600,
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: student.parentPhone != null && constraints.maxWidth > 240
+                              ? constraints.maxWidth - 130
+                              : constraints.maxWidth,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.family_restroom_rounded,
+                              size: 18,
+                              color: AppColors.secondary,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Text(
+                              isGu ? 'વાલી: ' : 'Parent: ',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Flexible(
+                              child: Text(
+                                student.parentName!,
+                                style: theme.textTheme.bodySmall,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                ],
+                      if (student.parentPhone != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.secondaryContainer.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.phone_rounded,
+                                size: 14,
+                                color: AppColors.secondary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                student.parentPhone!,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: AppColors.onSecondaryContainer,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ],
+            if (isPrincipal && classTeacher != null) ...[
+              const Divider(height: 20),
+              AssignedTeacherBadge(
+                teacher: classTeacher,
+                labelPrefix: isGu ? 'વર્ગ શિક્ષક' : 'Class Teacher',
+                showPhone: true,
               ),
             ],
           ],
@@ -365,12 +405,16 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                   color: Colors.blue.shade800,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  isGu ? 'વહીવટી નિરીક્ષક દૃશ્ય' : 'Administrative Observer View',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue.shade900,
-                    fontSize: 14,
+                Expanded(
+                  child: Text(
+                    isGu ? 'વહીવટી નિરીક્ષક દૃશ્ય' : 'Administrative Observer View',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue.shade900,
+                      fontSize: 14,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -583,6 +627,9 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
     StudentPerformanceSummary? summary,
   ) {
     final theme = Theme.of(context);
+    final auth = context.watch<AuthProvider>();
+    final user = auth.currentUser;
+    final isPrincipal = user?.role == UserRole.principal;
     final isGu = Localizations.localeOf(context).languageCode == 'gu';
 
     if (summary == null) {
@@ -707,6 +754,26 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                         level: subj.level,
                         height: 6,
                       ),
+                      if (isPrincipal) ...[
+                        Builder(
+                          builder: (context) {
+                            final assignedTeacher = MockData.getTeacherForSubject(
+                              subjectId: subj.subjectId,
+                              classId: student.classId,
+                              schoolId: student.schoolId,
+                            );
+                            if (assignedTeacher == null) return const SizedBox.shrink();
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 6.0),
+                              child: AssignedTeacherBadge(
+                                teacher: assignedTeacher,
+                                labelPrefix: isGu ? 'વિષય શિક્ષક' : 'Subject Teacher',
+                                compact: true,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                       // Parent review box (strictly visible only to assigned subject teacher)
                       ParentReviewBox(
                         studentId: student.id,
@@ -993,12 +1060,16 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
           decoration: BoxDecoration(shape: BoxShape.circle, color: color),
         ),
         const SizedBox(width: 8),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: color,
+        Expanded(
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         const SizedBox(width: 6),

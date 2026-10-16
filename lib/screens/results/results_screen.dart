@@ -16,6 +16,7 @@ import 'package:learning_setu/providers/auth_provider.dart';
 import 'package:learning_setu/providers/school_provider.dart';
 import 'package:learning_setu/models/student_model.dart';
 import 'package:learning_setu/providers/student_provider.dart';
+import 'package:learning_setu/widgets/assigned_teacher_badge.dart';
 import 'package:learning_setu/widgets/empty_state_widget.dart';
 import 'package:learning_setu/widgets/error_widget.dart';
 import 'package:learning_setu/widgets/loading_widget.dart';
@@ -591,6 +592,11 @@ class _ResultsScreenState extends State<ResultsScreen>
               ? '${student.className.replaceAll(RegExp(r"Class\s*", caseSensitive: false), "").trim()}-${student.section}'
               : '';
           final user = context.watch<AuthProvider>().currentUser;
+          final assignedTeacher = MockData.getTeacherForSubject(
+            subjectId: assessment.subjectId,
+            classId: student?.classId,
+            schoolId: student?.schoolId,
+          );
 
           return Card(
             elevation: 1,
@@ -681,6 +687,34 @@ class _ResultsScreenState extends State<ResultsScreen>
                                   ),
                                 ],
                               ),
+                              if (user?.role == UserRole.principal && assignedTeacher != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4.0),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.badge_outlined,
+                                        size: 13,
+                                        color: Colors.indigo.shade700,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(
+                                          Localizations.localeOf(context).languageCode == 'gu'
+                                              ? 'શિક્ષક: ${assignedTeacher.name}'
+                                              : 'Teacher: ${assignedTeacher.name}',
+                                          style: TextStyle(
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.indigo.shade800,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                             ],
                           ),
                         ),
@@ -796,6 +830,11 @@ class _ResultsScreenState extends State<ResultsScreen>
     final studentClass = student != null
         ? '${student.className.replaceAll(RegExp(r"Class\s*", caseSensitive: false), "").trim()}-${student.section}'
         : '';
+    final assignedTeacher = MockData.getTeacherForSubject(
+      subjectId: assessment.subjectId,
+      classId: student?.classId,
+      schoolId: student?.schoolId,
+    );
 
     showModalBottomSheet(
       context: context,
@@ -864,7 +903,6 @@ class _ResultsScreenState extends State<ResultsScreen>
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             context.read<AuthProvider>().currentUser?.role == UserRole.brc
@@ -874,18 +912,31 @@ class _ResultsScreenState extends State<ResultsScreen>
                             color: AppColors.primary,
                           ),
                           const SizedBox(width: 6),
-                          Text(
-                            context.read<AuthProvider>().currentUser?.role == UserRole.brc
-                                ? '${student.schoolName} • ${isGu ? "વર્ગ" : "Class"} $studentClass Batch'
-                                : '${student.name} (${student.studentId}) • ${isGu ? "વર્ગ" : "Class"} $studentClass',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
+                          Expanded(
+                            child: Text(
+                              context.read<AuthProvider>().currentUser?.role == UserRole.brc
+                                  ? '${student.schoolName} • ${isGu ? "વર્ગ" : "Class"} $studentClass Batch'
+                                  : '${student.name} (${student.studentId}) • ${isGu ? "વર્ગ" : "Class"} $studentClass',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
                       ),
+                    ),
+                  ],
+                  if (context.read<AuthProvider>().currentUser?.role == UserRole.principal &&
+                      assignedTeacher != null) ...[
+                    const SizedBox(height: 8),
+                    AssignedTeacherBadge(
+                      teacher: assignedTeacher,
+                      labelPrefix: isGu ? 'સોંપાયેલ વિષય શિક્ષક' : 'Assigned Subject Teacher',
+                      showPhone: true,
                     ),
                   ],
 
