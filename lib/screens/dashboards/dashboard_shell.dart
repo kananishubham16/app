@@ -4,6 +4,7 @@ import 'package:learning_setu/l10n/app_localizations.dart';
 import 'package:learning_setu/models/user_model.dart';
 import 'package:learning_setu/providers/auth_provider.dart';
 import 'package:learning_setu/providers/locale_provider.dart';
+import 'package:learning_setu/providers/student_provider.dart';
 import 'package:learning_setu/app/app_router.dart';
 
 class DashboardShell extends StatefulWidget {
@@ -231,7 +232,19 @@ class _DashboardShellState extends State<DashboardShell> {
             title: Text(l10n?.results ?? 'Results Details'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushNamed(context, AppRouter.results);
+              final isParent = user?.role == UserRole.parent;
+              final studentProv = Provider.of<StudentProvider>(context, listen: false);
+              final activeStudentId = isParent
+                  ? (studentProv.selectedStudent?.id ??
+                      (user?.childrenIds != null && user!.childrenIds!.isNotEmpty
+                          ? user.childrenIds!.first
+                          : null))
+                  : null;
+              Navigator.pushNamed(
+                context,
+                AppRouter.results,
+                arguments: activeStudentId,
+              );
             },
           ),
           ListTile(
@@ -239,7 +252,19 @@ class _DashboardShellState extends State<DashboardShell> {
             title: Text(l10n?.performanceAnalysis ?? 'Performance Analysis'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushNamed(context, AppRouter.performance);
+              final isParent = user?.role == UserRole.parent;
+              final studentProv = Provider.of<StudentProvider>(context, listen: false);
+              final activeStudentId = isParent
+                  ? (studentProv.selectedStudent?.id ??
+                      (user?.childrenIds != null && user!.childrenIds!.isNotEmpty
+                          ? user.childrenIds!.first
+                          : null))
+                  : null;
+              Navigator.pushNamed(
+                context,
+                AppRouter.performance,
+                arguments: activeStudentId,
+              );
             },
           ),
           ListTile(
@@ -249,7 +274,19 @@ class _DashboardShellState extends State<DashboardShell> {
             ),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushNamed(context, AppRouter.remedial);
+              final isParent = user?.role == UserRole.parent;
+              final studentProv = Provider.of<StudentProvider>(context, listen: false);
+              final activeStudentId = isParent
+                  ? (studentProv.selectedStudent?.id ??
+                      (user?.childrenIds != null && user!.childrenIds!.isNotEmpty
+                          ? user.childrenIds!.first
+                          : null))
+                  : null;
+              Navigator.pushNamed(
+                context,
+                AppRouter.remedial,
+                arguments: activeStudentId,
+              );
             },
           ),
           const Divider(),

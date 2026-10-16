@@ -87,7 +87,12 @@ class AppRouter {
       case AppRouter.subjects:
         return MaterialPageRoute(builder: (_) => const SubjectsScreen());
       case results:
-        return MaterialPageRoute(builder: (_) => const ResultsScreen());
+        final studentId = settings.arguments is String
+            ? settings.arguments as String
+            : (settings.arguments as Map?)?['studentId'] as String?;
+        return MaterialPageRoute(
+          builder: (_) => ResultsScreen(studentId: studentId),
+        );
       case addAssessment:
         final studentId = settings.arguments is String
             ? settings.arguments as String
@@ -117,7 +122,12 @@ class AppRouter {
       case quizResult:
         return MaterialPageRoute(builder: (_) => const QuizResultScreen());
       case remedial:
-        return MaterialPageRoute(builder: (_) => const RemedialScreen());
+        final studentId = settings.arguments is String
+            ? settings.arguments as String
+            : (settings.arguments as Map?)?['studentId'] as String?;
+        return MaterialPageRoute(
+          builder: (_) => RemedialScreen(studentId: studentId),
+        );
       case assignRemedial:
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(

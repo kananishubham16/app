@@ -8,6 +8,7 @@ import 'package:learning_setu/l10n/app_localizations.dart';
 import 'package:learning_setu/models/remedial_model.dart';
 import 'package:learning_setu/models/student_model.dart';
 import 'package:learning_setu/models/user_model.dart';
+import 'package:learning_setu/mock_data/mock_data.dart';
 import 'package:learning_setu/providers/auth_provider.dart';
 import 'package:learning_setu/providers/remedial_provider.dart';
 import 'package:learning_setu/providers/school_provider.dart';
@@ -47,11 +48,35 @@ class _RemedialScreenState extends State<RemedialScreen> {
       _initialized = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
+        final authProv = context.read<AuthProvider>();
+        final user = authProv.currentUser;
+        final isParent = user?.role == UserRole.parent;
+        final parentChildrenIds = user?.childrenIds ?? [];
+
         final studentProv = context.read<StudentProvider>();
-        final uniqueStudents = <String, StudentModel>{for (var s in studentProv.students) s.id: s}.values.toList();
-        _selectedStudentId ??= studentProv.selectedStudent?.id;
-        if (_selectedStudentId != null && !uniqueStudents.any((s) => s.id == _selectedStudentId)) {
-          _selectedStudentId = uniqueStudents.isNotEmpty ? uniqueStudents.first.id : null;
+        final List<StudentModel> baseStudents;
+        if (isParent) {
+          final fromProv = studentProv.students.where((s) => parentChildrenIds.contains(s.id)).toList();
+          baseStudents = fromProv.isNotEmpty
+              ? fromProv
+              : MockData.students.where((s) => parentChildrenIds.contains(s.id)).toList();
+        } else {
+          baseStudents = studentProv.students;
+        }
+
+        final uniqueStudents = <String, StudentModel>{for (var s in baseStudents) s.id: s}.values.toList();
+        if (isParent) {
+          if (_selectedStudentId == null || !parentChildrenIds.contains(_selectedStudentId)) {
+            _selectedStudentId = studentProv.selectedStudent?.id;
+            if (_selectedStudentId == null || !parentChildrenIds.contains(_selectedStudentId)) {
+              _selectedStudentId = uniqueStudents.isNotEmpty ? uniqueStudents.first.id : null;
+            }
+          }
+        } else {
+          _selectedStudentId ??= studentProv.selectedStudent?.id;
+          if (_selectedStudentId != null && !uniqueStudents.any((s) => s.id == _selectedStudentId)) {
+            _selectedStudentId = uniqueStudents.isNotEmpty ? uniqueStudents.first.id : null;
+          }
         }
         _loadData();
       });
@@ -100,6 +125,7 @@ class _RemedialScreenState extends State<RemedialScreen> {
 
     final user = authProv.currentUser;
     final isParent = user?.role == UserRole.parent;
+    final parentChildrenIds = user?.childrenIds ?? [];
     final isAdmin =
         user?.role == UserRole.principal || user?.role == UserRole.brc;
     final isTeacher = !isParent && !isAdmin;
@@ -111,10 +137,21 @@ class _RemedialScreenState extends State<RemedialScreen> {
             .where((r) => teacherSubjectIds.contains(r.subjectId))
             .toList()
         : remedialProv.remedials;
-    final students = studentProv.students;
+    final List<StudentModel> students;
+    if (isParent) {
+      final fromProv = studentProv.students.where((s) => parentChildrenIds.contains(s.id)).toList();
+      students = fromProv.isNotEmpty
+          ? fromProv
+          : MockData.students.where((s) => parentChildrenIds.contains(s.id)).toList();
+    } else {
+      students = studentProv.students;
+    }
 
     // Filter list
     final filteredList = allRemedials.where((r) {
+      if (isParent && !parentChildrenIds.contains(r.studentId)) {
+        return false;
+      }
       if (!isAdmin &&
           _selectedStudentId != null &&
           r.studentId != _selectedStudentId) {
@@ -167,9 +204,13 @@ class _RemedialScreenState extends State<RemedialScreen> {
                   // Role-specific Header
                   if (isAdmin)
                     _buildAdminAggregateSummary(allRemedials)
-                  else if (isParent)
-                    _buildParentGuidanceBanner()
-                  else
+                  else if (isParent) ...[
+                    _buildParentGuidanceBanner(),
+                    if (students.length > 1) ...[
+                      const SizedBox(height: 10),
+                      _buildStudentSelector(students, studentProv, l10n),
+                    ],
+                  ] else
                     _buildStudentSelector(students, studentProv, l10n),
 
                   if (isTeacher && teacherSubjectIds.isNotEmpty) ...[

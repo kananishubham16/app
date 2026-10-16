@@ -20,6 +20,7 @@ import 'package:learning_setu/widgets/percentage_bar.dart';
 import 'package:learning_setu/widgets/parent_review_box.dart';
 import 'package:learning_setu/l10n/app_localizations.dart';
 import 'package:learning_setu/app/theme.dart';
+import 'package:learning_setu/app/app_router.dart';
 
 
 class ParentDashboard extends StatefulWidget {
@@ -85,6 +86,9 @@ class _ParentDashboardState extends State<ParentDashboard> {
     if (child == null) return;
     context.read<StudentProvider>().selectStudent(child);
     await _loadChildDetails(child.id);
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -184,6 +188,14 @@ class _ParentDashboardState extends State<ParentDashboard> {
           SectionHeader(
             title: Localizations.localeOf(context).languageCode == 'gu' ? 'તાજેતરના મૂલ્યાંકન પરિણામો' : 'Recent Assessment Results',
             subtitle: Localizations.localeOf(context).languageCode == 'gu' ? 'વર્ગખંડના તાજેતરના મૂલ્યાંકન પરિણામો' : 'Latest classroom evaluations and milestone checks',
+            actionLabel: Localizations.localeOf(context).languageCode == 'gu' ? 'બધા જુઓ' : 'View All',
+            onAction: () {
+              Navigator.pushNamed(
+                context,
+                AppRouter.results,
+                arguments: currentChild.id,
+              );
+            },
           ),
           const SizedBox(height: 8),
           _buildRecentResultsList(assessments),
@@ -713,6 +725,13 @@ class _ParentDashboardState extends State<ParentDashboard> {
           final levelColor = AppColors.getPerformanceColor(level);
 
           return ListTile(
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                AppRouter.results,
+                arguments: item.studentId,
+              );
+            },
             leading: CircleAvatar(
               backgroundColor: levelColor.withOpacity(0.12),
               child: Icon(
@@ -752,7 +771,10 @@ class _ParentDashboardState extends State<ParentDashboard> {
   Widget _buildSubjectsTab() {
     final schoolProvider = context.watch<SchoolProvider>();
     final studentProvider = context.watch<StudentProvider>();
+    final performanceProvider = context.watch<PerformanceProvider>();
+    final assessmentProvider = context.watch<AssessmentProvider>();
     final subjects = schoolProvider.subjects;
+    final summary = performanceProvider.summary;
 
     final currentChild = studentProvider.selectedStudent ??
         (studentProvider.students.isNotEmpty ? studentProvider.students.first : null);
@@ -774,10 +796,25 @@ class _ParentDashboardState extends State<ParentDashboard> {
         ),
         const SizedBox(height: 12),
         ...subjects.map((subject) {
-          // Provide friendly supportive demo percentages
-          final isMath = subject.name.toLowerCase().contains('math');
-          final isScience = subject.name.toLowerCase().contains('science');
-          final score = isMath ? 58.0 : (isScience ? 76.0 : 82.0);
+          // Calculate score dynamically based on active child's assessments and performance summary
+          final sp = summary?.subjectPerformances
+              .where((p) => p.subjectId == subject.id)
+              .firstOrNull;
+
+          final childAssessments = assessmentProvider.assessments
+              .where((a) => a.studentId == currentChild?.id && a.subjectId == subject.id)
+              .toList();
+
+          final double score;
+          if (sp?.latestPercentage != null) {
+            score = sp!.latestPercentage!;
+          } else if (childAssessments.isNotEmpty) {
+            final totalObt = childAssessments.fold<double>(0, (sum, a) => sum + a.obtainedMarks);
+            final totalMax = childAssessments.fold<double>(0, (sum, a) => sum + a.totalMarks);
+            score = totalMax > 0 ? (totalObt / totalMax) * 100 : 70.0;
+          } else {
+            score = summary?.overallPercentage ?? 70.0;
+          }
           final level = PerformanceClassification.classify(score);
 
           String supportiveFeedback;

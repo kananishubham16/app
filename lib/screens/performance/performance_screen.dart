@@ -57,20 +57,43 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         final authProv = context.read<AuthProvider>();
-        final isBrc = authProv.currentUser?.role == UserRole.brc;
+        final user = authProv.currentUser;
+        final isBrc = user?.role == UserRole.brc;
+        final isParent = user?.role == UserRole.parent;
+        final parentChildrenIds = user?.childrenIds ?? [];
 
         if (isBrc) {
           _loadSchoolData();
         } else {
           final studentProv = context.read<StudentProvider>();
+          final List<StudentModel> baseStudents;
+          if (isParent) {
+            final fromProv = studentProv.students.where((s) => parentChildrenIds.contains(s.id)).toList();
+            baseStudents = fromProv.isNotEmpty
+                ? fromProv
+                : MockData.students.where((s) => parentChildrenIds.contains(s.id)).toList();
+          } else {
+            baseStudents = studentProv.students;
+          }
+
           final uniqueStudents = <String, StudentModel>{
-            for (var s in studentProv.students) s.id: s,
+            for (var s in baseStudents) s.id: s,
           }.values.toList();
-          _selectedStudentId ??= studentProv.selectedStudent?.id;
-          if (_selectedStudentId == null ||
-              !uniqueStudents.any((s) => s.id == _selectedStudentId)) {
-            _selectedStudentId =
-                uniqueStudents.isNotEmpty ? uniqueStudents.first.id : null;
+
+          if (isParent) {
+            if (_selectedStudentId == null || !parentChildrenIds.contains(_selectedStudentId)) {
+              _selectedStudentId = studentProv.selectedStudent?.id;
+              if (_selectedStudentId == null || !parentChildrenIds.contains(_selectedStudentId)) {
+                _selectedStudentId = uniqueStudents.isNotEmpty ? uniqueStudents.first.id : null;
+              }
+            }
+          } else {
+            _selectedStudentId ??= studentProv.selectedStudent?.id;
+            if (_selectedStudentId == null ||
+                !uniqueStudents.any((s) => s.id == _selectedStudentId)) {
+              _selectedStudentId =
+                  uniqueStudents.isNotEmpty ? uniqueStudents.first.id : null;
+            }
           }
           _loadData();
         }
@@ -115,7 +138,9 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
     final l10n = AppLocalizations.of(context);
     final authProv = context.watch<AuthProvider>();
     final perfProv = context.watch<PerformanceProvider>();
-    final isBrc = authProv.currentUser?.role == UserRole.brc;
+    final user = authProv.currentUser;
+    final isBrc = user?.role == UserRole.brc;
+    final isParent = user?.role == UserRole.parent;
     final isGu = Localizations.localeOf(context).languageCode == 'gu';
 
     if (isBrc) {
@@ -125,7 +150,17 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
     final studentProv = context.watch<StudentProvider>();
     final assessProv = context.watch<AssessmentProvider>();
 
-    final students = studentProv.students;
+    final parentChildrenIds = user?.childrenIds ?? [];
+    final List<StudentModel> students;
+    if (isParent) {
+      final fromProv = studentProv.students.where((s) => parentChildrenIds.contains(s.id)).toList();
+      students = fromProv.isNotEmpty
+          ? fromProv
+          : MockData.students.where((s) => parentChildrenIds.contains(s.id)).toList();
+    } else {
+      students = studentProv.students;
+    }
+
     final currentStudent = _findStudent(students);
     final summary = perfProv.summary;
 
@@ -286,10 +321,45 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
     AppLocalizations? l10n,
   ) {
     final theme = Theme.of(context);
+    final authProv = context.watch<AuthProvider>();
+    final isParent = authProv.currentUser?.role == UserRole.parent;
     final uniqueStudents = <String, StudentModel>{for (var s in students) s.id: s}.values.toList();
     final effectiveStudentId = uniqueStudents.any((s) => s.id == _selectedStudentId)
         ? _selectedStudentId
         : (uniqueStudents.isNotEmpty ? uniqueStudents.first.id : null);
+
+    if (isParent && uniqueStudents.length <= 1 && currentStudent != null) {
+      return Card(
+        elevation: 0.5,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: AppColors.dividerColor),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.person_rounded,
+                color: AppColors.primary,
+                size: 22,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  '${currentStudent.name} (${currentStudent.className}-${currentStudent.section})',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Card(
       elevation: 0.5,

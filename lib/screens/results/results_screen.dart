@@ -14,6 +14,8 @@ import 'package:learning_setu/models/user_model.dart';
 import 'package:learning_setu/providers/assessment_provider.dart';
 import 'package:learning_setu/providers/auth_provider.dart';
 import 'package:learning_setu/providers/school_provider.dart';
+import 'package:learning_setu/models/student_model.dart';
+import 'package:learning_setu/providers/student_provider.dart';
 import 'package:learning_setu/widgets/empty_state_widget.dart';
 import 'package:learning_setu/widgets/error_widget.dart';
 import 'package:learning_setu/widgets/loading_widget.dart';
@@ -34,6 +36,7 @@ class ResultsScreen extends StatefulWidget {
 class _ResultsScreenState extends State<ResultsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  String? _selectedStudentId;
   String? _selectedSubjectId;
   String? _selectedClassId;
   DateTimeRange? _selectedDateRange;
@@ -43,6 +46,7 @@ class _ResultsScreenState extends State<ResultsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _selectedStudentId = widget.studentId;
     if (widget.studentId != null) {
       final st = MockData.students.where((s) => s.id == widget.studentId).firstOrNull;
       if (st != null) {
@@ -66,13 +70,31 @@ class _ResultsScreenState extends State<ResultsScreen>
         if (!mounted) return;
         final schoolProv = context.read<SchoolProvider>();
         final authProv = context.read<AuthProvider>();
+        final studentProv = context.read<StudentProvider>();
         final user = authProv.currentUser;
+        final isParent = user != null && user.role == UserRole.parent;
 
-        if (_selectedClassId == null) {
-          if (schoolProv.selectedClass != null) {
-            _selectedClassId = schoolProv.selectedClass!.id;
-          } else if (user != null && user.classIds != null && user.classIds!.isNotEmpty) {
-            _selectedClassId = user.classIds!.first;
+        if (isParent) {
+          final parentChildrenIds = user.childrenIds ?? [];
+          if (_selectedStudentId == null || !parentChildrenIds.contains(_selectedStudentId)) {
+            _selectedStudentId = studentProv.selectedStudent?.id;
+            if (_selectedStudentId == null || !parentChildrenIds.contains(_selectedStudentId)) {
+              _selectedStudentId = parentChildrenIds.isNotEmpty ? parentChildrenIds.first : null;
+            }
+          }
+          if (_selectedStudentId != null) {
+            final st = MockData.students.where((s) => s.id == _selectedStudentId).firstOrNull;
+            if (st != null) {
+              _selectedClassId = st.classId;
+            }
+          }
+        } else {
+          if (_selectedClassId == null) {
+            if (schoolProv.selectedClass != null) {
+              _selectedClassId = schoolProv.selectedClass!.id;
+            } else if (user != null && user.classIds != null && user.classIds!.isNotEmpty) {
+              _selectedClassId = user.classIds!.first;
+            }
           }
         }
 
@@ -86,8 +108,16 @@ class _ResultsScreenState extends State<ResultsScreen>
     final schoolProv = context.read<SchoolProvider>();
     final authProv = context.read<AuthProvider>();
     final user = authProv.currentUser;
+    final isParent = user != null && user.role == UserRole.parent;
 
     await schoolProv.loadSubjects();
+
+    if (isParent) {
+      if (_selectedStudentId != null) {
+        await assessProv.loadAssessmentsByStudent(_selectedStudentId!);
+      }
+      return;
+    }
 
     final schoolId = user?.schoolId ?? 'school_1';
     if (schoolProv.classes.isEmpty) {
@@ -118,6 +148,7 @@ class _ResultsScreenState extends State<ResultsScreen>
     final authProv = context.watch<AuthProvider>();
 
     final user = authProv.currentUser;
+    final isParent = user != null && user.role == UserRole.parent;
     final isTeacher = user != null && user.role == UserRole.teacher;
     final teacherSubjectIds = (isTeacher && user.subjectIds != null) ? user.subjectIds! : <String>[];
 
@@ -135,13 +166,27 @@ class _ResultsScreenState extends State<ResultsScreen>
         ? schoolProv.subjects.where((s) => teacherSubjectIds.contains(s.id)).toList()
         : schoolProv.subjects;
 
-    final assessments = (isTeacher && teacherSubjectIds.isNotEmpty)
-        ? assessProv.assessments.where((a) => teacherSubjectIds.contains(a.subjectId)).toList()
-        : assessProv.assessments;
+    final parentChildrenIds = user?.childrenIds ?? [];
+    final List<StudentModel> parentChildren;
+    if (isParent) {
+      final fromProv = context.watch<StudentProvider>().students.where((s) => parentChildrenIds.contains(s.id)).toList();
+      parentChildren = fromProv.isNotEmpty
+          ? fromProv
+          : MockData.students.where((s) => parentChildrenIds.contains(s.id)).toList();
+    } else {
+      parentChildren = [];
+    }
+
+    // Role-based assessment scoping: parents can ONLY see assessments for _selectedStudentId
+    final assessments = isParent
+        ? assessProv.assessments.where((a) => a.studentId == _selectedStudentId).toList()
+        : ((isTeacher && teacherSubjectIds.isNotEmpty)
+            ? assessProv.assessments.where((a) => teacherSubjectIds.contains(a.subjectId)).toList()
+            : assessProv.assessments);
 
     // Filter assessments by class, subject and date range
     final filteredAssessments = assessments.where((a) {
-      if (_selectedClassId != null) {
+      if (!isParent && _selectedClassId != null) {
         final student = MockData.students.where((s) => s.id == a.studentId).firstOrNull;
         if (student != null && student.classId != _selectedClassId) {
           return false;
@@ -204,7 +249,12 @@ class _ResultsScreenState extends State<ResultsScreen>
           ? AppErrorWidget(message: assessProv.error!, onRetry: _loadData)
           : Column(
               children: [
-                _buildFiltersHeader(availableClasses, allSubjects),
+                _buildFiltersHeader(
+                  availableClasses,
+                  allSubjects,
+                  isParent: isParent,
+                  parentChildren: parentChildren,
+                ),
                 Expanded(
                   child: TabBarView(
                     controller: _tabController,
@@ -222,8 +272,10 @@ class _ResultsScreenState extends State<ResultsScreen>
 
   Widget _buildFiltersHeader(
     List<ClassModel> classes,
-    List<SubjectModel> subjects,
-  ) {
+    List<SubjectModel> subjects, {
+    required bool isParent,
+    required List<StudentModel> parentChildren,
+  }) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final isGu = Localizations.localeOf(context).languageCode == 'gu';
@@ -233,6 +285,10 @@ class _ResultsScreenState extends State<ResultsScreen>
     final uniqueSubjects = <String, SubjectModel>{for (var s in subjects) s.id: s}.values.toList();
     final effectiveSubjectId = uniqueSubjects.any((s) => s.id == _selectedSubjectId) ? _selectedSubjectId : null;
 
+    final effectiveChildId = parentChildren.any((c) => c.id == _selectedStudentId)
+        ? _selectedStudentId
+        : (parentChildren.isNotEmpty ? parentChildren.first.id : null);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       color: theme.colorScheme.surface,
@@ -240,70 +296,147 @@ class _ResultsScreenState extends State<ResultsScreen>
         children: [
           Row(
             children: [
-              // Class Selector (e.g. "All Classes", "3-A", "4-A")
-              Expanded(
-                flex: 5,
-                child: Container(
-                  height: 44,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceVariant,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.dividerColor),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String?>(
-                      value: effectiveClassId,
-                      isExpanded: true,
-                      hint: Text(
-                        l10n?.selectClass ?? (isGu ? 'વર્ગ પસંદ કરો' : 'Select Class'),
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      items: [
-                        DropdownMenuItem<String?>(
-                          value: null,
-                          child: Text(
-                            l10n?.allClasses ?? (isGu ? 'બધા વર્ગો' : 'All Classes'),
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
+              // If Parent: show Child Selector or Single Child Badge (Never show Class Selector to parents)
+              if (isParent)
+                Expanded(
+                  flex: 5,
+                  child: parentChildren.length > 1
+                      ? Container(
+                          height: 44,
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceVariant,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: AppColors.dividerColor),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: effectiveChildId,
+                              isExpanded: true,
+                              items: parentChildren.map((c) {
+                                return DropdownMenuItem<String>(
+                                  value: c.id,
+                                  child: Text(
+                                    '${c.name} (${c.className}-${c.section})',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (newChildId) {
+                                if (newChildId != null && newChildId != _selectedStudentId) {
+                                  setState(() {
+                                    _selectedStudentId = newChildId;
+                                    final st = MockData.students.where((s) => s.id == newChildId).firstOrNull;
+                                    if (st != null) _selectedClassId = st.classId;
+                                  });
+                                  final selectedChild = parentChildren.where((c) => c.id == newChildId).firstOrNull;
+                                  if (selectedChild != null) {
+                                    context.read<StudentProvider>().selectStudent(selectedChild);
+                                  }
+                                  _loadData();
+                                }
+                              },
                             ),
                           ),
+                        )
+                      : Container(
+                          height: 44,
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryContainer.withOpacity(0.35),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.person_outline_rounded, size: 16, color: AppColors.primary),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  parentChildren.isNotEmpty
+                                      ? '${parentChildren.first.name} (${parentChildren.first.className}-${parentChildren.first.section})'
+                                      : (_selectedStudentId ?? 'Child Profile'),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        ...classes.map((c) {
-                          return DropdownMenuItem<String?>(
-                            value: c.id,
+                )
+              else
+                // Class Selector (e.g. "All Classes", "3-A", "4-A")
+                Expanded(
+                  flex: 5,
+                  child: Container(
+                    height: 44,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceVariant,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.dividerColor),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String?>(
+                        value: effectiveClassId,
+                        isExpanded: true,
+                        hint: Text(
+                          l10n?.selectClass ?? (isGu ? 'વર્ગ પસંદ કરો' : 'Select Class'),
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        items: [
+                          DropdownMenuItem<String?>(
+                            value: null,
                             child: Text(
-                              _formatClassLabel(c),
+                              l10n?.allClasses ?? (isGu ? 'બધા વર્ગો' : 'All Classes'),
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                               ),
-                              overflow: TextOverflow.ellipsis,
                             ),
-                          );
-                        }),
-                      ],
-                      onChanged: (newClassId) {
-                        setState(() {
-                          _selectedClassId = newClassId;
-                        });
-                        if (newClassId != null) {
-                          context
-                              .read<AssessmentProvider>()
-                              .loadAssessmentsByClass(newClassId);
-                        } else {
-                          final user = context.read<AuthProvider>().currentUser;
-                          final teacherClassIds = (user?.role == UserRole.teacher) ? user?.classIds : null;
-                          context
-                              .read<AssessmentProvider>()
-                              .loadAllAssessments(classIds: teacherClassIds);
-                        }
-                      },
+                          ),
+                          ...classes.map((c) {
+                            return DropdownMenuItem<String?>(
+                              value: c.id,
+                              child: Text(
+                                _formatClassLabel(c),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }),
+                        ],
+                        onChanged: (newClassId) {
+                          setState(() {
+                            _selectedClassId = newClassId;
+                          });
+                          if (newClassId != null) {
+                            context
+                                .read<AssessmentProvider>()
+                                .loadAssessmentsByClass(newClassId);
+                          } else {
+                            final user = context.read<AuthProvider>().currentUser;
+                            final teacherClassIds = (user?.role == UserRole.teacher) ? user?.classIds : null;
+                            context
+                                .read<AssessmentProvider>()
+                                .loadAllAssessments(classIds: teacherClassIds);
+                          }
+                        },
+                      ),
                     ),
                   ),
                 ),
-              ),
               const SizedBox(width: 8),
 
               // Subject Filter
