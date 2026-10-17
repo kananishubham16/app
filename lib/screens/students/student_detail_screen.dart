@@ -1207,41 +1207,49 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      subjectName,
-                                      style: theme.textTheme.bodyLarge?.copyWith(
-                                        fontWeight: FontWeight.bold,
+                              LayoutBuilder(
+                                builder: (context, constraints) {
+                                  return Wrap(
+                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    spacing: 6,
+                                    runSpacing: 2,
+                                    children: [
+                                      ConstrainedBox(
+                                        constraints: BoxConstraints(maxWidth: constraints.maxWidth),
+                                        child: Text(
+                                          subjectName,
+                                          style: theme.textTheme.bodyLarge?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isQuiz
-                                          ? Colors.purple.shade50
-                                          : AppColors.surfaceVariant,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      isQuiz ? (isGu ? 'ઉપચારાત્મક ક્વિઝ' : 'Remedial Quiz') : (isGu ? 'નિયમિત' : 'Regular'),
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: isQuiz
-                                            ? Colors.purple.shade700
-                                            : AppColors.textSecondary,
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isQuiz
+                                              ? Colors.purple.shade50
+                                              : AppColors.surfaceVariant,
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          isQuiz ? (isGu ? 'ઉપચારાત્મક ક્વિઝ' : 'Remedial Quiz') : (isGu ? 'નિયમિત' : 'Regular'),
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                            color: isQuiz
+                                                ? Colors.purple.shade700
+                                                : AppColors.textSecondary,
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                ],
+                                    ],
+                                  );
+                                },
                               ),
                               const SizedBox(height: 4),
                               Text(

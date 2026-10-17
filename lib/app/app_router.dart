@@ -97,8 +97,12 @@ class AppRouter {
         final studentId = settings.arguments is String
             ? settings.arguments as String
             : (settings.arguments as Map?)?['studentId'] as String?;
+        final subjectId = (settings.arguments as Map?)?['subjectId'] as String?;
         return MaterialPageRoute(
-          builder: (_) => AddAssessmentScreen(studentId: studentId),
+          builder: (_) => AddAssessmentScreen(
+            studentId: studentId,
+            subjectId: subjectId,
+          ),
         );
       case performance:
         final studentId = settings.arguments is String
