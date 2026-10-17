@@ -133,6 +133,25 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
     final isGu = Localizations.localeOf(context).languageCode == 'gu';
     if (!_formKey.currentState!.validate()) return;
 
+    final authProv = context.read<AuthProvider>();
+    final user = authProv.currentUser;
+    if (user?.role == UserRole.teacher &&
+        user?.subjectIds != null &&
+        user!.subjectIds!.isNotEmpty &&
+        !user.subjectIds!.contains(_selectedSubjectId)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isGu
+                ? 'તમને ફક્ત તમારા સોંપાયેલા વિષયો માટે જ ઉપચારાત્મક કાર્ય સોંપવાની પરવાનગી છે.'
+                : 'You are only permitted to assign remedial actions for your assigned subjects.',
+          ),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+      return;
+    }
+
     if (_selectedStudentId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -315,6 +334,65 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   child: Text(isGu ? 'પાછા જાઓ' : 'Go Back'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (widget.subjectId != null &&
+        isTeacher &&
+        teacherSubjectIds.isNotEmpty &&
+        !teacherSubjectIds.contains(widget.subjectId)) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            l10n?.assignRemedial ?? (isGu ? 'ઉપચારાત્મક કાર્ય સોંપો' : 'Assign Remedial Action'),
+          ),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade50,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.lock_outline_rounded,
+                    size: 56,
+                    color: Colors.amber.shade800,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  isGu ? 'પરવાનગી પ્રતિબંધિત (View-Only)' : 'Permission Restricted (View-Only)',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  isGu
+                      ? 'તમે અન્ય શિક્ષકના વિષય માટે ઉપચારાત્મક કાર્ય સોંપી શકતા નથી. તમારી પાસે ફક્ત જોવાની પરવાનગી છે.'
+                      : 'You cannot assign remedial actions for other subjects. You have view-only access.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.arrow_back),
+                  label: Text(isGu ? 'પાછા જાઓ' : 'Go Back'),
                 ),
               ],
             ),

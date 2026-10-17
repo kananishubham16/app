@@ -517,6 +517,8 @@ class _RemedialScreenState extends State<RemedialScreen> {
     final statusColor = _getStatusColor(action.status);
     final student = students.where((s) => s.id == action.studentId).firstOrNull;
     final dueDateStr = DateFormat('dd MMM yyyy').format(action.dueDate);
+    final user = context.watch<AuthProvider>().currentUser;
+    final isAssignedSubjectTeacher = isTeacher && (user?.subjectIds?.contains(action.subjectId) ?? false);
 
     return Card(
       elevation: 1,
@@ -795,16 +797,45 @@ class _RemedialScreenState extends State<RemedialScreen> {
                 ),
               ),
             ],
+            if (isTeacher && !isAssignedSubjectTeacher) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.amber.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.lock_outline, size: 16, color: Colors.amber.shade800),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        Localizations.localeOf(context).languageCode == 'gu'
+                            ? 'માત્ર વાંચવા માટે (અન્ય શિક્ષકનો વિષય - સંપાદન પ્રતિબંધિત છે)'
+                            : 'View-Only (Other teacher\'s subject - editing restricted)',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.amber.shade900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
 
-            // Action Buttons
-            if ((action.hasQuiz && isTeacher) || isTeacher) ...[
+            // Action Buttons (Only for assigned subject teacher)
+            if (isAssignedSubjectTeacher) ...[
               const SizedBox(height: 14),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  if (action.hasQuiz && isTeacher)
+                  if (action.hasQuiz)
                     ElevatedButton.icon(
                       icon: const Icon(Icons.play_circle_fill_rounded, size: 18),
                       label: Text(
@@ -830,19 +861,17 @@ class _RemedialScreenState extends State<RemedialScreen> {
                         ).then((_) => _loadData());
                       },
                     ),
-                  if (isTeacher)
-                    OutlinedButton.icon(
-                      icon: const Icon(Icons.update_rounded, size: 16),
-                      label: Text(AppLocalizations.of(context)?.updateStatus ?? 'Update Status'),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(0, 42),
-                      ),
-                      onPressed: () => _showUpdateStatusDialog(action),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.update_rounded, size: 16),
+                    label: Text(AppLocalizations.of(context)?.updateStatus ?? 'Update Status'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, 42),
                     ),
+                    onPressed: () => _showUpdateStatusDialog(action),
+                  ),
                 ],
               ),
             ],
-
           ],
         ),
       ),
@@ -850,6 +879,20 @@ class _RemedialScreenState extends State<RemedialScreen> {
   }
 
   void _showUpdateStatusDialog(RemedialAction action) {
+    final user = context.read<AuthProvider>().currentUser;
+    if (user?.role == UserRole.teacher && !(user?.subjectIds?.contains(action.subjectId) ?? false)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            Localizations.localeOf(context).languageCode == 'gu'
+                ? 'પરવાનગી નકારી: તમે માત્ર તમારા સોંપાયેલ વિષયો માટે જ સ્થિતિ અપડેટ કરી શકો છો.'
+                : 'Permission Denied: You can only update status for your assigned subjects.',
+          ),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+      return;
+    }
     showDialog(
       context: context,
       builder: (context) {

@@ -64,7 +64,7 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
       await schoolProv.loadSubjects();
     }
 
-    final student = _resolveStudent();
+    final student = _resolveStudent(listen: false);
     if (student != null) {
       await Future.wait([
         assessProv.loadAssessmentsByStudent(student.id),
@@ -74,8 +74,10 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
     }
   }
 
-  StudentModel? _resolveStudent() {
-    final studentProv = context.watch<StudentProvider>();
+  StudentModel? _resolveStudent({bool listen = false}) {
+    final studentProv = listen
+        ? context.watch<StudentProvider>()
+        : context.read<StudentProvider>();
     if (widget.studentId != null) {
       final match = studentProv.students
           .where((s) => s.id == widget.studentId)
@@ -85,9 +87,11 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
     return studentProv.selectedStudent;
   }
 
-  SubjectModel? _resolveSubject() {
+  SubjectModel? _resolveSubject({bool listen = false}) {
     if (widget.subject != null) return widget.subject;
-    final schoolProv = context.watch<SchoolProvider>();
+    final schoolProv = listen
+        ? context.watch<SchoolProvider>()
+        : context.read<SchoolProvider>();
     final targetId = widget.subjectId ?? 'subject_math';
     return schoolProv.subjects.where((s) => s.id == targetId).firstOrNull;
   }
@@ -137,8 +141,8 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final subject = _resolveSubject();
-    final student = _resolveStudent();
+    final subject = _resolveSubject(listen: true);
+    final student = _resolveStudent(listen: true);
 
     if (subject == null) {
       return Scaffold(
@@ -326,6 +330,37 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
                           ? 'વિષય શિક્ષક'
                           : 'Subject Teacher',
                       showPhone: true,
+                    ),
+                  ],
+                  if (user?.role == UserRole.teacher && !(user?.subjectIds?.contains(subject.id) ?? false)) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade50,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.amber.shade300),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.visibility_outlined, size: 13, color: Colors.amber.shade900),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              Localizations.localeOf(context).languageCode == 'gu'
+                                  ? 'માત્ર વાંચવા માટે (અન્ય વિષય શિક્ષક)'
+                                  : 'View-Only Mode (Other Subject Teacher)',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.amber.shade900,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ],
@@ -520,9 +555,12 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
           const SizedBox(height: 12),
           Builder(
             builder: (ctx) {
-              final userRole = ctx.watch<AuthProvider>().currentUser?.role;
+              final user = ctx.watch<AuthProvider>().currentUser;
+              final userRole = user?.role;
               final isObserver = userRole == UserRole.principal || userRole == UserRole.brc;
               final isParent = userRole == UserRole.parent;
+              final isTeacher = userRole == UserRole.teacher;
+              final isAssignedTeacher = !isTeacher || (user?.subjectIds?.contains(subject.id) ?? false);
               final l10n = AppLocalizations.of(ctx);
 
               if (isObserver) {
@@ -542,6 +580,36 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
                         child: Text(
                           l10n?.remedialObservation ??
                               'Remedial quizzes are conducted by teachers in class or parents at home.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.amber.shade900,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              if (isTeacher && !isAssignedTeacher) {
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade50,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.amber.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.lock_outline_rounded, size: 20, color: Colors.amber.shade800),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          Localizations.localeOf(ctx).languageCode == 'gu'
+                              ? 'માત્ર વાંચવા માટે: તમે આ વિષયના સોંપાયેલ શિક્ષક નથી. ક્વિઝ અને ઉપચારાત્મક પ્રવૃત્તિઓ ફક્ત સોંપાયેલ વિષય શિક્ષક દ્વારા જ સંચાલિત થઈ શકે છે.'
+                              : 'View-Only Mode: You are not assigned to this subject. Practice quizzes and interventions can only be initiated by the assigned subject teacher.',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -796,7 +864,7 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            if (user?.role == UserRole.teacher) ...[
+            if (user?.role == UserRole.teacher && (user?.subjectIds?.contains(subject.id) ?? false)) ...[
               const SizedBox(width: 8),
               TextButton.icon(
                 icon: const Icon(Icons.add, size: 16),
@@ -886,13 +954,22 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
                 trailing: rem.hasQuiz
                     ? Builder(
                         builder: (ctx) {
-                          final userRole = ctx.watch<AuthProvider>().currentUser?.role;
+                          final user = ctx.watch<AuthProvider>().currentUser;
+                          final userRole = user?.role;
                           final isObserver = userRole == UserRole.principal || userRole == UserRole.brc;
-                          if (isObserver) {
-                            return const Icon(
-                              Icons.assignment_turned_in_outlined,
-                              color: AppColors.textSecondary,
-                              size: 20,
+                          final isTeacher = userRole == UserRole.teacher;
+                          final isAssignedTeacher = !isTeacher || (user?.subjectIds?.contains(rem.subjectId) ?? false);
+
+                          if (isObserver || (isTeacher && !isAssignedTeacher)) {
+                            return Tooltip(
+                              message: Localizations.localeOf(ctx).languageCode == 'gu'
+                                  ? 'માત્ર વાંચવા માટે: સોંપાયેલ શિક્ષક જ ક્વિઝ લઈ શકે છે'
+                                  : 'View-only: Only assigned subject teacher can supervise quiz',
+                              child: const Icon(
+                                Icons.assignment_turned_in_outlined,
+                                color: AppColors.textSecondary,
+                                size: 20,
+                              ),
                             );
                           }
                           return IconButton(

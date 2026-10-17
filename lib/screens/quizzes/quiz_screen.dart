@@ -4,6 +4,8 @@ import 'package:learning_setu/l10n/app_localizations.dart';
 
 import 'package:learning_setu/app/app_router.dart';
 import 'package:learning_setu/app/theme.dart';
+import 'package:learning_setu/models/user_model.dart';
+import 'package:learning_setu/providers/auth_provider.dart';
 import 'package:learning_setu/providers/quiz_provider.dart';
 import 'package:learning_setu/providers/student_provider.dart';
 import 'package:learning_setu/widgets/empty_state_widget.dart';
@@ -49,12 +51,20 @@ class _QuizScreenState extends State<QuizScreen> {
   Future<void> _loadQuestions() async {
     final quizProv = context.read<QuizProvider>();
     final studentProv = context.read<StudentProvider>();
+    final authProv = context.read<AuthProvider>();
 
     final effectiveStudent = studentProv.selectedStudent;
     final effectiveClassId =
         widget.classId ?? effectiveStudent?.classId ?? 'class_3a_s1';
     final effectiveSubjectId = widget.subjectId ?? 'subject_math';
     final effectiveTopicId = widget.topicId ?? 'topic_math_add';
+
+    final user = authProv.currentUser;
+    final isTeacher = user?.role == UserRole.teacher;
+    final teacherSubjectIds = (isTeacher && user?.subjectIds != null) ? user!.subjectIds! : <String>[];
+    if (isTeacher && teacherSubjectIds.isNotEmpty && !teacherSubjectIds.contains(effectiveSubjectId)) {
+      return;
+    }
 
     final hasQuestions = await quizProv.loadQuestions(
       classId: effectiveClassId,
@@ -100,11 +110,30 @@ class _QuizScreenState extends State<QuizScreen> {
   Future<void> _handleSubmit() async {
     final quizProv = context.read<QuizProvider>();
     final studentProv = context.read<StudentProvider>();
+    final authProv = context.read<AuthProvider>();
 
     final effectiveStudentId =
         widget.studentId ?? studentProv.selectedStudent?.id ?? 'student_1';
     final effectiveSubjectId = widget.subjectId ?? 'subject_math';
     final effectiveTopicId = widget.topicId ?? 'topic_math_add';
+
+    final user = authProv.currentUser;
+    final isTeacher = user?.role == UserRole.teacher;
+    final teacherSubjectIds = (isTeacher && user?.subjectIds != null) ? user!.subjectIds! : <String>[];
+    if (isTeacher && teacherSubjectIds.isNotEmpty && !teacherSubjectIds.contains(effectiveSubjectId)) {
+      final isGu = Localizations.localeOf(context).languageCode == 'gu';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isGu
+                ? 'તમે ફક્ત તમારા સોંપાયેલા વિષય માટે જ ક્વિઝ સબમિટ કરી શકો છો.'
+                : 'You can only supervise and submit quizzes for your assigned subjects.',
+          ),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+      return;
+    }
 
     setState(() {
       _isSubmitting = true;
@@ -143,8 +172,68 @@ class _QuizScreenState extends State<QuizScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final quizProv = context.watch<QuizProvider>();
+    final authProv = context.watch<AuthProvider>();
     final isGu = Localizations.localeOf(context).languageCode == 'gu';
     final l10n = AppLocalizations.of(context);
+
+    final user = authProv.currentUser;
+    final isTeacher = user?.role == UserRole.teacher;
+    final teacherSubjectIds = (isTeacher && user?.subjectIds != null) ? user!.subjectIds! : <String>[];
+    final effectiveSubjectId = widget.subjectId ?? 'subject_math';
+
+    if (isTeacher && teacherSubjectIds.isNotEmpty && !teacherSubjectIds.contains(effectiveSubjectId)) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.topicName ?? (isGu ? 'ક્વિઝ મૂલ્યાંકન' : 'Quiz Assessment')),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade50,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.lock_outline_rounded,
+                    size: 56,
+                    color: Colors.amber.shade800,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  isGu ? 'પરવાનગી પ્રતિબંધિત (View-Only)' : 'Permission Restricted (View-Only)',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  isGu
+                      ? 'તમે અન્ય શિક્ષકના વિષય માટે ક્વિઝ સુપરવાઇઝ અથવા સબમિટ કરી શકતા નથી. તમારી પાસે ફક્ત જોવાની પરવાનગી છે.'
+                      : 'You cannot supervise or submit quizzes for other subjects. You have view-only access.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.arrow_back),
+                  label: Text(isGu ? 'પાછા જાઓ' : 'Go Back'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     if (quizProv.isLoading) {
       return Scaffold(
