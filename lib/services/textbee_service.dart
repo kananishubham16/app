@@ -135,8 +135,14 @@ class TextBeeService {
         },
       ).timeout(const Duration(seconds: 10));
 
-      final data = jsonDecode(response.body);
-      if (response.statusCode == 200) {
+      dynamic data;
+      try {
+        data = jsonDecode(response.body);
+      } catch (_) {
+        data = null;
+      }
+
+      if (response.statusCode == 200 && data is Map) {
         final devices = data['data'] as List?;
         if (devices != null && devices.isNotEmpty) {
           final targetDevId = await getDeviceId();
@@ -159,9 +165,12 @@ class TextBeeService {
           );
         }
       } else {
+        final errMsg = data is Map
+            ? (data['message'] ?? data['error'] ?? data.toString())
+            : response.body;
         return TextBeeResult(
           success: false,
-          message: data['message']?.toString() ?? 'Device check failed (${response.statusCode})',
+          message: '$errMsg (HTTP ${response.statusCode})',
           statusCode: response.statusCode,
         );
       }
@@ -223,8 +232,14 @@ class TextBeeService {
           )
           .timeout(const Duration(seconds: 15));
 
-      final data = jsonDecode(response.body);
-      if (response.statusCode == 200 && (data['success'] == true || data['status'] == 'success')) {
+      dynamic data;
+      try {
+        data = jsonDecode(response.body);
+      } catch (_) {
+        data = null;
+      }
+
+      if (response.statusCode == 200 && data is Map && (data['success'] == true || data['status'] == 'success')) {
         final reqId = data['messageId']?.toString() ?? data['id']?.toString();
         return TextBeeResult(
           success: true,
@@ -233,12 +248,12 @@ class TextBeeService {
           statusCode: response.statusCode,
         );
       } else {
-        final err = data['error']?.toString() ??
-            data['message']?.toString() ??
-            'Failed to dispatch SMS (Code: ${response.statusCode})';
+        final err = (data is Map)
+            ? (data['error']?.toString() ?? data['message']?.toString() ?? data.toString())
+            : (response.body.isNotEmpty ? response.body : 'HTTP ${response.statusCode}');
         return TextBeeResult(
           success: false,
-          message: err,
+          message: '$err (Code: ${response.statusCode})',
           statusCode: response.statusCode,
         );
       }
