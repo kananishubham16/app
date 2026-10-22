@@ -447,10 +447,21 @@ void main() {
       expect(resultBadPhone.message, contains('Expected 10 digits'));
     });
 
-    test('Initializes with provided API key override', () async {
-      final service = TextBeeService(apiKey: 'sample_textbee_key');
+    test('Initializes with provided API key override and retrieves deviceId', () async {
+      final service = TextBeeService(
+        apiKey: 'sample_textbee_key',
+        deviceId: 'custom_device_id_123',
+      );
       final key = await service.getApiKey();
+      final devId = await service.getDeviceId();
       expect(key, 'sample_textbee_key');
+      expect(devId, 'custom_device_id_123');
+    });
+
+    test('Defaults to configured deviceId when none provided', () async {
+      final service = TextBeeService();
+      final devId = await service.getDeviceId();
+      expect(devId, '6ad9a177a4996b8ebf9a713e');
     });
   });
 

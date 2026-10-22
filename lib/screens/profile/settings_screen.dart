@@ -28,8 +28,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _apiKeyController = TextEditingController();
   bool _obscureApiKey = true;
   final _textBeeKeyController = TextEditingController();
+  final _textBeeDeviceIdController = TextEditingController();
   bool _obscureTextBeeKey = true;
   bool _isTestingSms = false;
+  bool _isCheckingDevice = false;
 
   @override
   void initState() {
@@ -42,10 +44,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final key = await aiService.getApiKey();
     final textBee = TextBeeService();
     final smsKey = await textBee.getApiKey();
+    final devId = await textBee.getDeviceId();
     if (mounted) {
       setState(() {
         if (key != null) _apiKeyController.text = key;
         if (smsKey != null) _textBeeKeyController.text = smsKey;
+        _textBeeDeviceIdController.text = devId;
       });
     }
   }
@@ -54,6 +58,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void dispose() {
     _apiKeyController.dispose();
     _textBeeKeyController.dispose();
+    _textBeeDeviceIdController.dispose();
     super.dispose();
   }
 
@@ -81,21 +86,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _saveTextBeeKey() async {
     final isGu = Localizations.localeOf(context).languageCode == 'gu';
     final text = _textBeeKeyController.text.trim();
+    final devId = _textBeeDeviceIdController.text.trim();
     final textBee = TextBeeService();
     await textBee.setApiKey(text.isEmpty ? null : text);
+    await textBee.setDeviceId(devId.isEmpty ? null : devId);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             text.isEmpty
-                ? (isGu ? 'TextBee કી દૂર કરવામાં આવી' : 'TextBee API Key cleared')
-                : (isGu ? 'TextBee કી સફળતાપૂર્વક સાચવવામાં આવી' : 'TextBee API Key saved successfully'),
+                ? (isGu ? 'TextBee કી દૂર કરવામાં આવી' : 'TextBee settings cleared')
+                : (isGu ? 'TextBee કન્ફિગરેશન સફળતાપૂર્વક સાચવવામાં આવ્યું' : 'TextBee settings saved successfully'),
           ),
           backgroundColor: const Color(0xFFE11D48),
         ),
       );
       setState(() {});
     }
+  }
+
+  Future<void> _checkDeviceConnection() async {
+    final isGu = Localizations.localeOf(context).languageCode == 'gu';
+    final key = _textBeeKeyController.text.trim();
+    if (key.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isGu ? 'પહેલાં TextBee API કી દાખલ કરો' : 'Please enter a TextBee API Key first'),
+          backgroundColor: Colors.amber.shade800,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isCheckingDevice = true);
+    final textBee = TextBeeService(
+      apiKey: key,
+      deviceId: _textBeeDeviceIdController.text.trim(),
+    );
+    final result = await textBee.checkDeviceStatus();
+    if (!mounted) return;
+    setState(() => _isCheckingDevice = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(result.message),
+        backgroundColor: result.success ? Colors.green.shade700 : Colors.red.shade700,
+      ),
+    );
   }
 
   Future<void> _testTextBee() async {
@@ -162,7 +199,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (targetPhone == null || targetPhone.isEmpty || !mounted) return;
 
     setState(() => _isTestingSms = true);
-    final textBee = TextBeeService(apiKey: key);
+    final devId = _textBeeDeviceIdController.text.trim();
+    final textBee = TextBeeService(
+      apiKey: key,
+      deviceId: devId.isNotEmpty ? devId : null,
+    );
     final result = await textBee.sendSms(
       phone: targetPhone,
       message: isGu
@@ -613,11 +654,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       isDense: true,
                     ),
                   ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _textBeeDeviceIdController,
+                    decoration: InputDecoration(
+                      labelText: isGu ? 'TextBee ડિવાઇસ ID' : 'TextBee Device ID',
+                      hintText: 'e.g. 6ad9a177a4996b8ebf9a713e',
+                      prefixIcon: const Icon(Icons.phone_android_rounded, size: 20),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      isDense: true,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     isGu
-                        ? '💡 textbee.dev પર સાઇન-અપ કરીને તમારી API કી મેળવો. તમારા Android ફોનને SMS ગેટવે તરીકે વાપરો.'
-                        : '💡 Sign up at textbee.dev and link your Android phone to use it as an SMS gateway.',
+                        ? '💡 textbee.dev પર સાઇન-અપ કરીને તમારી API કી અને ડિવાઇસ ID મેળવો. તમારા Android ફોન પર TextBee ઍપ ચાલુ હોવી જરૂરી છે.'
+                        : '💡 Ensure the TextBee app is installed, running, and connected on your Android device (SIM card sends the SMS).',
                     style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 12),
@@ -634,6 +686,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         ),
                         onPressed: _saveTextBeeKey,
+                      ),
+                      OutlinedButton.icon(
+                        icon: _isCheckingDevice
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.phonelink_ring_rounded, size: 16),
+                        label: Text(isGu ? 'ડિવાઇસ સ્થિતિ' : 'Check Device'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                        onPressed: _isCheckingDevice ? null : _checkDeviceConnection,
                       ),
                       OutlinedButton.icon(
                         icon: _isTestingSms
@@ -659,6 +725,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           onPressed: () {
                             _textBeeKeyController.clear();
+                            _textBeeDeviceIdController.clear();
                             _saveTextBeeKey();
                           },
                         ),

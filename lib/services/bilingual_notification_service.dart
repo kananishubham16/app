@@ -391,8 +391,12 @@ Practice Portal: https://learningsetu.gujarat.gov.in/practice
 
     if (savedKey == null || savedKey.trim().isEmpty) {
       if (!context.mounted) return;
-      final controller = TextEditingController();
-      final entered = await showDialog<String>(
+      final keyController = TextEditingController();
+      final devId = await textBee.getDeviceId();
+      if (!context.mounted) return;
+      final deviceController = TextEditingController(text: devId);
+
+      final entered = await showDialog<bool>(
         context: context,
         builder: (dialogCtx) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -415,15 +419,25 @@ Practice Portal: https://learningsetu.gujarat.gov.in/practice
               Text(
                 isGu
                     ? 'વાલીના ફોન પર સીધો SMS મોકલવા માટે તમારી TextBee કી દાખલ કરો (textbee.dev પર સાઇન અપ કરો).'
-                    : 'Enter your TextBee API key to auto-dispatch SMS directly. (Sign up at textbee.dev to get your key).',
+                    : 'Enter your TextBee API key and Device ID to auto-dispatch SMS directly.',
                 style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
               ),
               const SizedBox(height: 14),
               TextField(
-                controller: controller,
+                controller: keyController,
                 decoration: InputDecoration(
                   labelText: isGu ? 'API કી' : 'API Key',
                   hintText: 'e.g. your TextBee API key',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: deviceController,
+                decoration: InputDecoration(
+                  labelText: isGu ? 'ડિવાઇસ ID' : 'Device ID',
+                  hintText: 'e.g. 6ad9a177a4996b8ebf9a713e',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   isDense: true,
                 ),
@@ -432,7 +446,7 @@ Practice Portal: https://learningsetu.gujarat.gov.in/practice
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(dialogCtx),
+              onPressed: () => Navigator.pop(dialogCtx, false),
               child: Text(isGu ? 'રદ કરો' : 'Cancel'),
             ),
             ElevatedButton(
@@ -441,8 +455,8 @@ Practice Portal: https://learningsetu.gujarat.gov.in/practice
                 foregroundColor: Colors.white,
               ),
               onPressed: () {
-                if (controller.text.trim().isNotEmpty) {
-                  Navigator.pop(dialogCtx, controller.text.trim());
+                if (keyController.text.trim().isNotEmpty) {
+                  Navigator.pop(dialogCtx, true);
                 }
               },
               child: Text(isGu ? 'સાચવો અને મોકલો' : 'Save & Send'),
@@ -451,8 +465,11 @@ Practice Portal: https://learningsetu.gujarat.gov.in/practice
         ),
       );
 
-      if (entered != null && entered.isNotEmpty) {
-        await textBee.setApiKey(entered);
+      if (entered == true && keyController.text.trim().isNotEmpty) {
+        await textBee.setApiKey(keyController.text.trim());
+        if (deviceController.text.trim().isNotEmpty) {
+          await textBee.setDeviceId(deviceController.text.trim());
+        }
       } else {
         return;
       }
