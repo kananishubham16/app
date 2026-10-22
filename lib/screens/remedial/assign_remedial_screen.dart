@@ -76,14 +76,25 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
     if (!_initialized) {
       final studentProv = context.read<StudentProvider>();
       final schoolProv = context.read<SchoolProvider>();
+      final authProv = context.read<AuthProvider>();
+
+      final user = authProv.currentUser;
+      final isTeacher = user?.role == UserRole.teacher;
+      final teacherSubjectIds = (isTeacher && user?.subjectIds != null) ? user!.subjectIds! : <String>[];
 
       _selectedStudentId ??= studentProv.selectedStudent?.id;
       if (_selectedStudentId == null && studentProv.students.isNotEmpty) {
         _selectedStudentId = studentProv.students.first.id;
       }
 
-      if (_selectedSubjectId == null && schoolProv.subjects.isNotEmpty) {
-        _selectedSubjectId = schoolProv.subjects.first.id;
+      if (isTeacher) {
+        if (widget.subjectId != null && teacherSubjectIds.contains(widget.subjectId)) {
+          _selectedSubjectId = widget.subjectId;
+        } else {
+          _selectedSubjectId = teacherSubjectIds.isNotEmpty ? teacherSubjectIds.first : null;
+        }
+      } else {
+        _selectedSubjectId ??= (schoolProv.subjects.isNotEmpty ? schoolProv.subjects.first.id : null);
       }
 
       _syncTopicSelection();
@@ -135,21 +146,23 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
 
     final authProv = context.read<AuthProvider>();
     final user = authProv.currentUser;
-    if (user?.role == UserRole.teacher &&
-        user?.subjectIds != null &&
-        user!.subjectIds!.isNotEmpty &&
-        !user.subjectIds!.contains(_selectedSubjectId)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isGu
-                ? 'તમને ફક્ત તમારા સોંપાયેલા વિષયો માટે જ ઉપચારાત્મક કાર્ય સોંપવાની પરવાનગી છે.'
-                : 'You are only permitted to assign remedial actions for your assigned subjects.',
+    final isTeacher = user?.role == UserRole.teacher;
+    final teacherSubjectIds = (isTeacher && user?.subjectIds != null) ? user!.subjectIds! : <String>[];
+
+    if (isTeacher) {
+      if (_selectedSubjectId == null || !teacherSubjectIds.contains(_selectedSubjectId)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isGu
+                  ? 'તમને ફક્ત તમારા સોંપાયેલા વિષયો માટે જ ઉપચારાત્મક કાર્ય સોંપવાની પરવાનગી છે.'
+                  : 'You are only permitted to assign remedial actions for your assigned subjects.',
+            ),
+            backgroundColor: Colors.red.shade700,
           ),
-          backgroundColor: Colors.red.shade700,
-        ),
-      );
-      return;
+        );
+        return;
+      }
     }
 
     if (_selectedStudentId == null) {
@@ -266,7 +279,7 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
     final isTeacher = user?.role == UserRole.teacher;
     final teacherSubjectIds = (isTeacher && user?.subjectIds != null) ? user!.subjectIds! : <String>[];
 
-    final subjects = (isTeacher && teacherSubjectIds.isNotEmpty)
+    final subjects = isTeacher
         ? schoolProv.subjects.where((s) => teacherSubjectIds.contains(s.id)).toList()
         : schoolProv.subjects;
 
@@ -284,6 +297,17 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
         subjects.any((s) => s.id == _selectedSubjectId)
             ? _selectedSubjectId
             : (subjects.isNotEmpty ? subjects.first.id : null);
+
+    if (_selectedSubjectId != effectiveSubjectId) {
+      _selectedSubjectId = effectiveSubjectId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _syncTopicSelection();
+          });
+        }
+      });
+    }
 
     final currentSubject = subjects
         .where((s) => s.id == effectiveSubjectId)
@@ -342,9 +366,49 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
       );
     }
 
+    if (isTeacher && teacherSubjectIds.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            l10n?.assignRemedial ?? (isGu ? 'ઉપચારાત્મક કાર્ય સોંપો' : 'Assign Remedial Action'),
+          ),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.lock_outline_rounded, size: 56, color: Colors.amber.shade800),
+                const SizedBox(height: 20),
+                Text(
+                  isGu ? 'કોઈ સોંપાયેલ વિષય નથી' : 'No Assigned Subjects',
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  isGu
+                      ? 'તમારી પાસે ઉપચારાત્મક કાર્યો સોંપવા માટે કોઈ વિષય ફાળવેલ નથી.'
+                      : 'You do not have any assigned subjects to assign remedial actions for.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.arrow_back),
+                  label: Text(isGu ? 'પાછા જાઓ' : 'Go Back'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     if (widget.subjectId != null &&
         isTeacher &&
-        teacherSubjectIds.isNotEmpty &&
         !teacherSubjectIds.contains(widget.subjectId)) {
       return Scaffold(
         appBar: AppBar(
@@ -381,8 +445,8 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
                 const SizedBox(height: 12),
                 Text(
                   isGu
-                      ? 'તમે અન્ય શિક્ષકના વિષય માટે ઉપચારાત્મક કાર્ય સોંપી શકતા નથી. તમારી પાસે ફક્ત જોવાની પરવાનગી છે.'
-                      : 'You cannot assign remedial actions for other subjects. You have view-only access.',
+                      ? 'તમે અન્ય શિક્ષકના વિષય માટે ઉપચારાત્મક કાર્ય સોંપી શકતા નથી. તમારી પાસે ફક્ત તમારા સોંપાયેલા વિષયો માટે જ કાર્ય સોંપવાની પરવાનગી છે.'
+                      : 'You cannot assign remedial actions for other subjects. You are only permitted to assign tasks for your assigned subjects.',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: AppColors.textSecondary,

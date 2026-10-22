@@ -1,6 +1,8 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:learning_setu/models/performance_model.dart';
+import 'package:learning_setu/services/gemini_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AiAnalysisResult {
@@ -18,29 +20,40 @@ class AiAnalysisResult {
 }
 
 /// Service providing AI-powered performance diagnostics.
-/// Uses Google Gemini REST API when online & configured,
+/// Uses Google Gemini SDK when online & configured,
 /// with an intelligent pedagogical synthesis fallback for offline/demo reliability.
 class AiAnalysisService {
   static const String _geminiApiKeyPrefKey = 'gemini_api_key';
-  static const String _modelName = 'Gemini 1.5 Flash';
+  static const String _modelName = 'Gemini Flash';
   static const String _fallbackModelName = 'Pedagogical AI Engine';
 
-  final http.Client _client;
   String? _cachedApiKey;
 
-  AiAnalysisService({String? apiKey, http.Client? client})
-      : _cachedApiKey = apiKey,
-        _client = client ?? http.Client();
+  AiAnalysisService({String? apiKey})
+      : _cachedApiKey = apiKey;
 
   /// Gets the currently stored Gemini API key, if any.
   Future<String?> getApiKey() async {
-    if (_cachedApiKey != null) return _cachedApiKey;
+    if (_cachedApiKey != null && _cachedApiKey!.isNotEmpty) return _cachedApiKey;
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(_geminiApiKeyPrefKey);
+      final key = prefs.getString(_geminiApiKeyPrefKey);
+      if (key != null && key.trim().isNotEmpty) return key.trim();
     } catch (_) {
-      return null;
+      // Ignored in headless unit test environments
     }
+
+    // Fallback to .env configuration if available
+    try {
+      final envKey = dotenv.env['GEMINI_API_KEY'];
+      if (envKey != null && envKey.trim().isNotEmpty) {
+        return envKey.trim();
+      }
+    } catch (_) {
+      // dotenv may not be initialized in some tests
+    }
+
+    return null;
   }
 
   /// Sets or updates the Gemini API key.
@@ -134,7 +147,8 @@ class AiAnalysisService {
     );
   }
 
-  /// Calls the Gemini REST API with structured JSON output instructions.
+  /// Calls the Gemini API via the official google_generative_ai SDK
+  /// with structured JSON output instructions.
   Future<AiAnalysisResult?> _callGeminiApi({
     required String apiKey,
     required double overallPercentage,
@@ -144,10 +158,6 @@ class AiAnalysisService {
     required List<SubjectPerformance> subjectPerformances,
     required String languageCode,
   }) async {
-    final endpoint = Uri.parse(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey',
-    );
-
     final subjectsSummary = subjectPerformances.map((s) {
       final scoreStr = s.latestPercentage != null
           ? '${s.latestPercentage!.toStringAsFixed(1)}%'
@@ -181,49 +191,86 @@ Important Instructions:
 }
 ''';
 
-    final body = jsonEncode({
-      'contents': [
-        {
-          'parts': [
-            {'text': promptText},
-          ],
-        },
-      ],
-      'generationConfig': {
-        'temperature': 0.3,
-        'maxOutputTokens': 800,
-        'responseMimeType': 'application/json',
-      },
-    });
+    try {
+      final gemini = GeminiService(apiKey: apiKey);
+      final jsonText = await gemini
+          .generateJson(promptText, temperature: 0.3, maxTokens: 800)
+          .timeout(const Duration(seconds: 10));
 
-    final response = await _client
-        .post(
-          endpoint,
-          headers: {'Content-Type': 'application/json'},
-          body: body,
-        )
-        .timeout(const Duration(seconds: 6));
+      final parsed = jsonDecode(jsonText);
+      final summary = parsed['summary'] as String?;
+      final actions = (parsed['recommendedActions'] as List?)?.cast<String>();
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final text =
-          data['candidates']?[0]?['content']?[0]?['parts']?[0]?['text'] ??
-          data['candidates']?[0]?['content']?['parts']?[0]?['text'];
-
-      if (text != null) {
-        final parsed = jsonDecode(text);
-        final summary = parsed['summary'] as String?;
-        final actions = (parsed['recommendedActions'] as List?)?.cast<String>();
-
-        if (summary != null && actions != null && actions.isNotEmpty) {
-          return AiAnalysisResult(
-            summary: summary,
-            recommendedActions: actions,
-            isOnlineAi: true,
-            modelName: _modelName,
-          );
-        }
+      if (summary != null && actions != null && actions.isNotEmpty) {
+        return AiAnalysisResult(
+          summary: summary,
+          recommendedActions: actions,
+          isOnlineAi: true,
+          modelName: _modelName,
+        );
       }
+    } catch (e) {
+      debugPrint('Gemini SDK call failed: $e');
+    }
+
+    return null;
+  }
+
+  /// Calls the Gemini API for institutional / school-level BRC diagnostics.
+  Future<AiAnalysisResult?> _callGeminiSchoolApi({
+    required String apiKey,
+    required String schoolId,
+    required String schoolName,
+    required double overallPercentage,
+    required double coveragePercentage,
+    required double remedialCompletionRate,
+    required List<String> criticalGapTopics,
+    required int totalClasses,
+    required String languageCode,
+  }) async {
+    final promptText = '''
+You are a senior primary education administrator and institutional auditor for Gujarat primary schools (BRC level).
+Analyze this school's assessment coverage and academic mastery data to provide an executive institutional diagnostic and concrete administrative interventions.
+
+School Metrics:
+- School Name: $schoolName (ID: $schoolId)
+- Overall Mastery Score: ${overallPercentage.toStringAsFixed(1)}%
+- Assessment Coverage: ${coveragePercentage.toStringAsFixed(0)}%
+- Remedial Completion Rate: ${remedialCompletionRate.toStringAsFixed(0)}%
+- Enrolled Classes: $totalClasses
+- Critical Learning Gap Topics: ${criticalGapTopics.isEmpty ? 'None identified' : criticalGapTopics.join(', ')}
+- Target Output Language: ${languageCode == 'gu' ? 'Gujarati (ગુજરાતી)' : 'English'}
+
+Instructions:
+1. Provide a professional, encouraging, and data-driven executive summary explaining the institutional health of this school.
+2. Formulate 3 to 4 specific, actionable, institutional-level recommendations for the Block Resource Centre (BRC) and School Headmaster.
+3. Respond ONLY with a valid JSON object matching this schema:
+{
+  "summary": "String",
+  "recommendedActions": ["String", "String", "String"]
+}
+''';
+
+    try {
+      final gemini = GeminiService(apiKey: apiKey);
+      final jsonText = await gemini
+          .generateJson(promptText, temperature: 0.3, maxTokens: 800)
+          .timeout(const Duration(seconds: 10));
+
+      final parsed = jsonDecode(jsonText);
+      final summary = parsed['summary'] as String?;
+      final actions = (parsed['recommendedActions'] as List?)?.cast<String>();
+
+      if (summary != null && actions != null && actions.isNotEmpty) {
+        return AiAnalysisResult(
+          summary: summary,
+          recommendedActions: actions,
+          isOnlineAi: true,
+          modelName: _modelName,
+        );
+      }
+    } catch (e) {
+      debugPrint('Gemini school API call failed: $e');
     }
 
     return null;
@@ -394,6 +441,26 @@ Important Instructions:
     String languageCode = 'en',
     bool forceRefresh = false,
   }) async {
+    final apiKey = await getApiKey();
+    if (apiKey != null && apiKey.isNotEmpty) {
+      try {
+        final onlineResult = await _callGeminiSchoolApi(
+          apiKey: apiKey,
+          schoolId: schoolId,
+          schoolName: schoolName,
+          overallPercentage: overallPercentage,
+          coveragePercentage: coveragePercentage,
+          remedialCompletionRate: remedialCompletionRate,
+          criticalGapTopics: criticalGapTopics,
+          totalClasses: totalClasses,
+          languageCode: languageCode,
+        );
+        if (onlineResult != null) return onlineResult;
+      } catch (e) {
+        debugPrint('Gemini school analysis failed, falling back: $e');
+      }
+    }
+
     final isGu = languageCode == 'gu';
 
     String statusNarrative;

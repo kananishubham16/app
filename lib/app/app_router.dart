@@ -133,12 +133,17 @@ class AppRouter {
           builder: (_) => RemedialScreen(studentId: studentId),
         );
       case assignRemedial:
-        final args = settings.arguments as Map<String, dynamic>?;
+        final mapArgs = settings.arguments is Map ? settings.arguments as Map : null;
+        final studentId = settings.arguments is String
+            ? settings.arguments as String
+            : mapArgs?['studentId'] as String?;
+        final subjectId = mapArgs?['subjectId'] as String?;
+        final topicId = mapArgs?['topicId'] as String?;
         return MaterialPageRoute(
           builder: (_) => AssignRemedialScreen(
-            studentId: args?['studentId'] as String?,
-            subjectId: args?['subjectId'] as String?,
-            topicId: args?['topicId'] as String?,
+            studentId: studentId,
+            subjectId: subjectId,
+            topicId: topicId,
           ),
         );
       case AppRouter.profile:

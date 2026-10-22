@@ -528,10 +528,15 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                   minimumSize: const Size(0, 48),
                 ),
                 onPressed: () {
+                  final targetSubjectId = (isTeacher && teacherSubjectIds.isNotEmpty)
+                      ? teacherSubjectIds.first
+                      : null;
                   Navigator.pushNamed(
                     context,
                     AppRouter.addAssessment,
-                    arguments: {'studentId': student.id},
+                    arguments: targetSubjectId != null
+                        ? {'studentId': student.id, 'subjectId': targetSubjectId}
+                        : {'studentId': student.id},
                   ).then((_) => _loadData());
                 },
               ),
@@ -549,10 +554,15 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                   minimumSize: const Size(0, 48),
                 ),
                 onPressed: () {
+                  final targetSubjectId = (isTeacher && teacherSubjectIds.isNotEmpty)
+                      ? teacherSubjectIds.first
+                      : null;
                   Navigator.pushNamed(
                     context,
                     AppRouter.assignRemedial,
-                    arguments: {'studentId': student.id},
+                    arguments: targetSubjectId != null
+                        ? {'studentId': student.id, 'subjectId': targetSubjectId}
+                        : {'studentId': student.id},
                   ).then((_) => _loadData());
                 },
               ),

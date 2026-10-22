@@ -244,4 +244,133 @@ void main() {
     expect(find.text('પરવાનગી પ્રતિબંધિત (View-Only)'), findsOneWidget);
     expect(find.textContaining('તમે અન્ય શિક્ષકના વિષય માટે ક્વિઝ સુપરવાઇઝ અથવા સબમિટ કરી શકતા નથી'), findsOneWidget);
   });
+
+  testWidgets('Gujarati teacher opening AssignRemedialScreen sees ONLY Gujarati in dropdown and not unassigned subjects', (tester) async {
+    final mockAuthRepo = MockAuthRepository();
+    final authProv = AuthProvider(mockAuthRepo, StorageService());
+    await tester.runAsync(() async {
+      await authProv.demoLogin(UserRole.teacher, userId: 'user_teacher_guj');
+    });
+
+    await tester.pumpWidget(
+      buildTeacherApp(
+        authProv: authProv,
+        child: const AssignRemedialScreen(studentId: 'student_1'),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    final menuItems = tester.widgetList<DropdownMenuItem<String>>(find.byType(DropdownMenuItem<String>));
+    final itemValues = menuItems.map((m) => m.value).toList();
+
+    // Gujarati teacher must have 'subject_guj', but not other subjects
+    expect(itemValues, contains('subject_guj'));
+    expect(itemValues.contains('subject_math'), isFalse);
+    expect(itemValues.contains('subject_eng'), isFalse);
+    expect(itemValues.contains('subject_evs'), isFalse);
+  });
+
+  testWidgets('Gujarati teacher opening AddAssessmentScreen sees ONLY Gujarati in dropdown and not unassigned subjects', (tester) async {
+    final mockAuthRepo = MockAuthRepository();
+    final authProv = AuthProvider(mockAuthRepo, StorageService());
+    await tester.runAsync(() async {
+      await authProv.demoLogin(UserRole.teacher, userId: 'user_teacher_guj');
+    });
+
+    await tester.pumpWidget(
+      buildTeacherApp(
+        authProv: authProv,
+        child: const AddAssessmentScreen(studentId: 'student_1'),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    final menuItems = tester.widgetList<DropdownMenuItem<String>>(find.byType(DropdownMenuItem<String>));
+    final itemValues = menuItems.map((m) => m.value).toList();
+
+    expect(itemValues, contains('subject_guj'));
+    expect(itemValues.contains('subject_math'), isFalse);
+    expect(itemValues.contains('subject_eng'), isFalse);
+    expect(itemValues.contains('subject_evs'), isFalse);
+  });
+
+  testWidgets('Math & English teacher sees only Math and English in AssignRemedial dropdown', (tester) async {
+    final mockAuthRepo = MockAuthRepository();
+    final authProv = AuthProvider(mockAuthRepo, StorageService());
+    await tester.runAsync(() async {
+      await authProv.demoLogin(UserRole.teacher, userId: 'user_teacher');
+    });
+
+    await tester.pumpWidget(
+      buildTeacherApp(
+        authProv: authProv,
+        child: const AssignRemedialScreen(studentId: 'student_1'),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    final subjectDropdown = tester.widget<DropdownButton<String>>(
+      find.byType(DropdownButton<String>).at(1),
+    );
+    final itemValues = subjectDropdown.items!.map((m) => m.value).toList();
+
+    expect(itemValues, containsAll(['subject_math', 'subject_eng']));
+    expect(itemValues.contains('subject_guj'), isFalse);
+    expect(itemValues.contains('subject_evs'), isFalse);
+  });
+
+  testWidgets('Teacher with no assigned subjects sees No Assigned Subjects screen on AssignRemedial and AddAssessment', (tester) async {
+    final customRepo = _CustomTeacherAuthRepo(
+      const UserModel(
+        id: 'user_teacher_no_sub',
+        name: 'New Teacher',
+        email: 'new@demo.com',
+        phone: '1234567890',
+        role: UserRole.teacher,
+        subjectIds: [],
+      ),
+    );
+    final authProv = AuthProvider(customRepo, StorageService());
+    await tester.runAsync(() async {
+      await authProv.demoLogin(UserRole.teacher);
+    });
+
+    // 1. AssignRemedialScreen
+    await tester.pumpWidget(
+      buildTeacherApp(
+        authProv: authProv,
+        child: const AssignRemedialScreen(studentId: 'student_1'),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('કોઈ સોંપાયેલ વિષય નથી'), findsOneWidget);
+
+    // 2. AddAssessmentScreen
+    await tester.pumpWidget(
+      buildTeacherApp(
+        authProv: authProv,
+        child: const AddAssessmentScreen(studentId: 'student_1'),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('કોઈ સોંપાયેલ વિષય નથી'), findsOneWidget);
+  });
+}
+
+class _CustomTeacherAuthRepo extends MockAuthRepository {
+  final UserModel customUser;
+  _CustomTeacherAuthRepo(this.customUser);
+
+  @override
+  Future<UserModel?> demoLogin(UserRole role, {String? userId}) async {
+    return customUser;
+  }
 }

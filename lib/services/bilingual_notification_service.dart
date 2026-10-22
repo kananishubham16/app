@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:learning_setu/app/theme.dart';
-import 'package:learning_setu/services/fast2sms_service.dart';
+import 'package:learning_setu/services/textbee_service.dart';
 
 /// Service responsible for constructing bilingual (English + Gujarati) notification
 /// messages for student assessment results, quiz marks, and remedial alerts.
@@ -219,13 +219,13 @@ Practice Portal: https://learningsetu.gujarat.gov.in/practice
                 ),
               ),
               const SizedBox(height: 16),
-              // Fast2SMS Automated Dispatch Button
+              // TextBee Automated Dispatch Button
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
                   icon: const Icon(Icons.bolt_rounded, size: 20),
                   label: Text(
-                    isGu ? '⚡ આપમેળે SMS મોકલો (Fast2SMS API)' : '⚡ Auto-Send SMS (Fast2SMS API)',
+                    isGu ? '⚡ આપમેળે SMS મોકલો (TextBee API)' : '⚡ Auto-Send SMS (TextBee API)',
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
                   ),
                   style: FilledButton.styleFrom(
@@ -236,7 +236,7 @@ Practice Portal: https://learningsetu.gujarat.gov.in/practice
                   ),
                   onPressed: () async {
                     Navigator.pop(modalContext);
-                    await handleFast2SmsDispatch(
+                    await handleTextBeeDispatch(
                       context: context,
                       phone: recipientPhone,
                       message: message,
@@ -379,15 +379,15 @@ Practice Portal: https://learningsetu.gujarat.gov.in/practice
     return false;
   }
 
-  /// Dispatches message automatically using Fast2SMS Dev API
-  static Future<void> handleFast2SmsDispatch({
+  /// Dispatches message automatically using TextBee API
+  static Future<void> handleTextBeeDispatch({
     required BuildContext context,
     required String phone,
     required String message,
   }) async {
     final isGu = Localizations.localeOf(context).languageCode == 'gu';
-    final fast2sms = Fast2SmsService();
-    final savedKey = await fast2sms.getApiKey();
+    final textBee = TextBeeService();
+    final savedKey = await textBee.getApiKey();
 
     if (savedKey == null || savedKey.trim().isEmpty) {
       if (!context.mounted) return;
@@ -402,7 +402,7 @@ Practice Portal: https://learningsetu.gujarat.gov.in/practice
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  isGu ? 'Fast2SMS API કી દાખલ કરો' : 'Enter Fast2SMS API Key',
+                  isGu ? 'TextBee API કી દાખલ કરો' : 'Enter TextBee API Key',
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -414,16 +414,16 @@ Practice Portal: https://learningsetu.gujarat.gov.in/practice
             children: [
               Text(
                 isGu
-                    ? 'વાલીના ફોન પર સીધો SMS મોકલવા માટે તમારી Fast2SMS કી દાખલ કરો (fast2sms.com પર સાઇન અપ પર ₹૫૦ મફત મળે છે).'
-                    : 'Enter your Fast2SMS authorization key to auto-dispatch SMS directly. (fast2sms.com provides ₹50 free testing credits on signup).',
+                    ? 'વાલીના ફોન પર સીધો SMS મોકલવા માટે તમારી TextBee કી દાખલ કરો (textbee.dev પર સાઇન અપ કરો).'
+                    : 'Enter your TextBee API key to auto-dispatch SMS directly. (Sign up at textbee.dev to get your key).',
                 style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
               ),
               const SizedBox(height: 14),
               TextField(
                 controller: controller,
                 decoration: InputDecoration(
-                  labelText: isGu ? 'API કી' : 'Authorization Key',
-                  hintText: 'e.g. 52Xy... or Fast2SMS Key',
+                  labelText: isGu ? 'API કી' : 'API Key',
+                  hintText: 'e.g. your TextBee API key',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   isDense: true,
                 ),
@@ -434,10 +434,6 @@ Practice Portal: https://learningsetu.gujarat.gov.in/practice
             TextButton(
               onPressed: () => Navigator.pop(dialogCtx),
               child: Text(isGu ? 'રદ કરો' : 'Cancel'),
-            ),
-            OutlinedButton(
-              onPressed: () => Navigator.pop(dialogCtx, 'textbelt'),
-              child: Text(isGu ? '૧ SMS મફત (Textbelt)' : '1 SMS Free (Textbelt)'),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -456,7 +452,7 @@ Practice Portal: https://learningsetu.gujarat.gov.in/practice
       );
 
       if (entered != null && entered.isNotEmpty) {
-        await fast2sms.setApiKey(entered);
+        await textBee.setApiKey(entered);
       } else {
         return;
       }
@@ -476,7 +472,7 @@ Practice Portal: https://learningsetu.gujarat.gov.in/practice
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                isGu ? 'Fast2SMS દ્વારા SMS મોકલાઈ રહ્યો છે...' : 'Dispatching SMS via Fast2SMS...',
+                isGu ? 'TextBee દ્વારા SMS મોકલાઈ રહ્યો છે...' : 'Dispatching SMS via TextBee...',
               ),
             ),
           ],
@@ -485,7 +481,7 @@ Practice Portal: https://learningsetu.gujarat.gov.in/practice
       ),
     );
 
-    final result = await fast2sms.sendSms(
+    final result = await textBee.sendSms(
       phone: phone,
       message: message,
     );
@@ -525,7 +521,7 @@ Practice Portal: https://learningsetu.gujarat.gov.in/practice
                   const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    isGu ? 'Fast2SMS નિષ્ફળ' : 'Fast2SMS Dispatch Failed',
+                    isGu ? 'TextBee નિષ્ફળ' : 'TextBee Dispatch Failed',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ],

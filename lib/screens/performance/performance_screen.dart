@@ -1379,7 +1379,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                 ),
               );
             }),
-            if (user?.role == UserRole.teacher) ...[
+            if (user?.role == UserRole.teacher && (user?.subjectIds?.isNotEmpty ?? false)) ...[
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
@@ -1392,10 +1392,14 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                     minimumSize: const Size(double.infinity, 46),
                   ),
                   onPressed: () {
+                    final teacherSubjectIds = user?.subjectIds ?? [];
+                    final targetSubjectId = teacherSubjectIds.isNotEmpty ? teacherSubjectIds.first : null;
                     Navigator.pushNamed(
                       context,
                       AppRouter.assignRemedial,
-                      arguments: {'studentId': student?.id},
+                      arguments: targetSubjectId != null
+                          ? {'studentId': student?.id, 'subjectId': targetSubjectId}
+                          : {'studentId': student?.id},
                     ).then((_) => _loadData());
                   },
                 ),

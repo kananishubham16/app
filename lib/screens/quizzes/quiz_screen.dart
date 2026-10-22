@@ -56,13 +56,14 @@ class _QuizScreenState extends State<QuizScreen> {
     final effectiveStudent = studentProv.selectedStudent;
     final effectiveClassId =
         widget.classId ?? effectiveStudent?.classId ?? 'class_3a_s1';
-    final effectiveSubjectId = widget.subjectId ?? 'subject_math';
-    final effectiveTopicId = widget.topicId ?? 'topic_math_add';
-
     final user = authProv.currentUser;
     final isTeacher = user?.role == UserRole.teacher;
     final teacherSubjectIds = (isTeacher && user?.subjectIds != null) ? user!.subjectIds! : <String>[];
-    if (isTeacher && teacherSubjectIds.isNotEmpty && !teacherSubjectIds.contains(effectiveSubjectId)) {
+    final defaultSubjectId = (isTeacher && teacherSubjectIds.isNotEmpty) ? teacherSubjectIds.first : 'subject_math';
+    final effectiveSubjectId = widget.subjectId ?? defaultSubjectId;
+    final effectiveTopicId = widget.topicId ?? 'topic_math_add';
+
+    if (isTeacher && !teacherSubjectIds.contains(effectiveSubjectId)) {
       return;
     }
 
@@ -114,13 +115,14 @@ class _QuizScreenState extends State<QuizScreen> {
 
     final effectiveStudentId =
         widget.studentId ?? studentProv.selectedStudent?.id ?? 'student_1';
-    final effectiveSubjectId = widget.subjectId ?? 'subject_math';
-    final effectiveTopicId = widget.topicId ?? 'topic_math_add';
-
     final user = authProv.currentUser;
     final isTeacher = user?.role == UserRole.teacher;
     final teacherSubjectIds = (isTeacher && user?.subjectIds != null) ? user!.subjectIds! : <String>[];
-    if (isTeacher && teacherSubjectIds.isNotEmpty && !teacherSubjectIds.contains(effectiveSubjectId)) {
+    final defaultSubjectId = (isTeacher && teacherSubjectIds.isNotEmpty) ? teacherSubjectIds.first : 'subject_math';
+    final effectiveSubjectId = widget.subjectId ?? defaultSubjectId;
+    final effectiveTopicId = widget.topicId ?? 'topic_math_add';
+
+    if (isTeacher && !teacherSubjectIds.contains(effectiveSubjectId)) {
       final isGu = Localizations.localeOf(context).languageCode == 'gu';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -179,9 +181,10 @@ class _QuizScreenState extends State<QuizScreen> {
     final user = authProv.currentUser;
     final isTeacher = user?.role == UserRole.teacher;
     final teacherSubjectIds = (isTeacher && user?.subjectIds != null) ? user!.subjectIds! : <String>[];
-    final effectiveSubjectId = widget.subjectId ?? 'subject_math';
+    final defaultSubjectId = (isTeacher && teacherSubjectIds.isNotEmpty) ? teacherSubjectIds.first : 'subject_math';
+    final effectiveSubjectId = widget.subjectId ?? defaultSubjectId;
 
-    if (isTeacher && teacherSubjectIds.isNotEmpty && !teacherSubjectIds.contains(effectiveSubjectId)) {
+    if (isTeacher && !teacherSubjectIds.contains(effectiveSubjectId)) {
       return Scaffold(
         appBar: AppBar(
           title: Text(widget.topicName ?? (isGu ? 'ક્વિઝ મૂલ્યાંકન' : 'Quiz Assessment')),

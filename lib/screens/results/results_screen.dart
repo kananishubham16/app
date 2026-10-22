@@ -163,7 +163,7 @@ class _ResultsScreenState extends State<ResultsScreen>
       availableClasses = classesFromSchool;
     }
 
-    final allSubjects = (isTeacher && teacherSubjectIds.isNotEmpty)
+    final allSubjects = isTeacher
         ? schoolProv.subjects.where((s) => teacherSubjectIds.contains(s.id)).toList()
         : schoolProv.subjects;
 
@@ -230,12 +230,16 @@ class _ResultsScreenState extends State<ResultsScreen>
           ],
         ),
       ),
-      floatingActionButton: isTeacher
+      floatingActionButton: isTeacher && teacherSubjectIds.isNotEmpty
           ? FloatingActionButton.extended(
               onPressed: () {
+                final targetSubjectId = teacherSubjectIds.isNotEmpty ? teacherSubjectIds.first : null;
                 Navigator.pushNamed(
                   context,
                   AppRouter.addAssessment,
+                  arguments: targetSubjectId != null
+                      ? {'subjectId': targetSubjectId}
+                      : null,
                 ).then((value) {
                   if (value == true) _loadData();
                 });

@@ -11,7 +11,7 @@ import 'package:learning_setu/providers/remedial_provider.dart';
 import 'package:learning_setu/providers/student_provider.dart';
 import 'package:learning_setu/services/storage_service.dart';
 import 'package:learning_setu/services/ai_analysis_service.dart';
-import 'package:learning_setu/services/fast2sms_service.dart';
+import 'package:learning_setu/services/textbee_service.dart';
 
 /// Settings screen for configuring language preferences (English / Gujarati),
 /// reviewing hackathon problem metadata, resetting demo datasets, and reading
@@ -27,8 +27,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isResetting = false;
   final _apiKeyController = TextEditingController();
   bool _obscureApiKey = true;
-  final _fast2SmsKeyController = TextEditingController();
-  bool _obscureFast2SmsKey = true;
+  final _textBeeKeyController = TextEditingController();
+  bool _obscureTextBeeKey = true;
   bool _isTestingSms = false;
 
   @override
@@ -40,12 +40,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadApiKey() async {
     final aiService = AiAnalysisService();
     final key = await aiService.getApiKey();
-    final fast2sms = Fast2SmsService();
-    final smsKey = await fast2sms.getApiKey();
+    final textBee = TextBeeService();
+    final smsKey = await textBee.getApiKey();
     if (mounted) {
       setState(() {
         if (key != null) _apiKeyController.text = key;
-        if (smsKey != null) _fast2SmsKeyController.text = smsKey;
+        if (smsKey != null) _textBeeKeyController.text = smsKey;
       });
     }
   }
@@ -53,7 +53,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void dispose() {
     _apiKeyController.dispose();
-    _fast2SmsKeyController.dispose();
+    _textBeeKeyController.dispose();
     super.dispose();
   }
 
@@ -78,18 +78,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _saveFast2SmsKey() async {
+  Future<void> _saveTextBeeKey() async {
     final isGu = Localizations.localeOf(context).languageCode == 'gu';
-    final text = _fast2SmsKeyController.text.trim();
-    final fast2sms = Fast2SmsService();
-    await fast2sms.setApiKey(text.isEmpty ? null : text);
+    final text = _textBeeKeyController.text.trim();
+    final textBee = TextBeeService();
+    await textBee.setApiKey(text.isEmpty ? null : text);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             text.isEmpty
-                ? (isGu ? 'Fast2SMS કી દૂર કરવામાં આવી' : 'Fast2SMS API Key cleared')
-                : (isGu ? 'Fast2SMS કી સફળતાપૂર્વક સાચવવામાં આવી' : 'Fast2SMS API Key saved successfully'),
+                ? (isGu ? 'TextBee કી દૂર કરવામાં આવી' : 'TextBee API Key cleared')
+                : (isGu ? 'TextBee કી સફળતાપૂર્વક સાચવવામાં આવી' : 'TextBee API Key saved successfully'),
           ),
           backgroundColor: const Color(0xFFE11D48),
         ),
@@ -98,13 +98,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _testFast2Sms() async {
+  Future<void> _testTextBee() async {
     final isGu = Localizations.localeOf(context).languageCode == 'gu';
-    final key = _fast2SmsKeyController.text.trim();
+    final key = _textBeeKeyController.text.trim();
     if (key.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isGu ? 'કૃપા કરીને પહેલાં Fast2SMS API કી દાખલ કરો' : 'Please enter a Fast2SMS API Key first'),
+          content: Text(isGu ? 'કૃપા કરીને પહેલાં TextBee API કી દાખલ કરો' : 'Please enter a TextBee API Key first'),
           backgroundColor: Colors.amber.shade800,
         ),
       );
@@ -129,8 +129,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Text(
               isGu
-                  ? 'Fast2SMS ગેટવે ચકાસવા માટે ૧૦ આંકડાનો ભારતીય મોબાઈલ નંબર દાખલ કરો:'
-                  : 'Enter 10-digit Indian mobile number to test Fast2SMS gateway:',
+                  ? 'TextBee ગેટવે ચકાસવા માટે ૧૦ આંકડાનો ભારતીય મોબાઈલ નંબર દાખલ કરો:'
+                  : 'Enter 10-digit Indian mobile number to test TextBee gateway:',
               style: const TextStyle(fontSize: 13),
             ),
             const SizedBox(height: 12),
@@ -162,12 +162,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (targetPhone == null || targetPhone.isEmpty || !mounted) return;
 
     setState(() => _isTestingSms = true);
-    final fast2sms = Fast2SmsService(apiKey: key);
-    final result = await fast2sms.sendSms(
+    final textBee = TextBeeService(apiKey: key);
+    final result = await textBee.sendSms(
       phone: targetPhone,
       message: isGu
-          ? 'લર્નિંગ સેતુ: Fast2SMS ગેટવે ટેસ્ટ સફળ! વિદ્યાર્થી પ્રગતિ સૂચનાઓ સક્રિય છે.'
-          : 'Learning Setu: Fast2SMS gateway test successful! Automated parent alerts active.',
+          ? 'લર્નિંગ સેતુ: TextBee ગેટવે ટેસ્ટ સફળ! વિદ્યાર્થી પ્રગતિ સૂચનાઓ સક્રિય છે.'
+          : 'Learning Setu: TextBee gateway test successful! Automated parent alerts active.',
     );
 
     if (!mounted) return;
@@ -510,9 +510,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 20),
 
-          // Fast2SMS Automated Gateway Section
+          // TextBee Automated Gateway Section
           Text(
-            isGu ? 'ઓટોમેટેડ SMS ગેટવે (Fast2SMS API)' : 'Automated SMS Gateway (Fast2SMS API)',
+            isGu ? 'ઓટોમેટેડ SMS ગેટવે (TextBee API)' : 'Automated SMS Gateway (TextBee API)',
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -552,7 +552,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               children: [
                                 const Flexible(
                                   child: Text(
-                                    'Fast2SMS Dev Gateway',
+                                    'TextBee SMS Gateway',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15,
@@ -569,7 +569,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     border: Border.all(color: Colors.green.shade300),
                                   ),
                                   child: Text(
-                                    isGu ? '₹૫૦ મફત ક્રેડિટ' : '₹50 Free Trial',
+                                    isGu ? 'મફત ટ્રાયલ' : 'Free Trial',
                                     style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
@@ -582,8 +582,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             const SizedBox(height: 2),
                             Text(
                               isGu
-                                  ? 'ક્વિક રૂટ (route=q) દ્વારા વાલીઓને આપમેળે સીધો SMS મોકલો'
-                                  : 'Auto-dispatch SMS to parents via Quick Route (no DLT required for testing)',
+                                  ? 'TextBee ગેટવે દ્વારા વાલીઓને આપમેળે સીધો SMS મોકલો'
+                                  : 'Auto-dispatch SMS to parents via TextBee gateway',
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: AppColors.textSecondary,
@@ -596,18 +596,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(height: 14),
                   TextField(
-                    controller: _fast2SmsKeyController,
-                    obscureText: _obscureFast2SmsKey,
+                    controller: _textBeeKeyController,
+                    obscureText: _obscureTextBeeKey,
                     decoration: InputDecoration(
-                      labelText: isGu ? 'Fast2SMS API કી (Authorization)' : 'Fast2SMS Authorization API Key',
-                      hintText: isGu ? 'તમારી Fast2SMS API કી દાખલ કરો' : 'Enter your Fast2SMS authorization key',
+                      labelText: isGu ? 'TextBee API કી' : 'TextBee API Key',
+                      hintText: isGu ? 'તમારી TextBee API કી દાખલ કરો' : 'Enter your TextBee API key',
                       prefixIcon: const Icon(Icons.vpn_key_rounded, size: 20),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscureFast2SmsKey ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                          _obscureTextBeeKey ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                           size: 20,
                         ),
-                        onPressed: () => setState(() => _obscureFast2SmsKey = !_obscureFast2SmsKey),
+                        onPressed: () => setState(() => _obscureTextBeeKey = !_obscureTextBeeKey),
                       ),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                       isDense: true,
@@ -616,8 +616,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 8),
                   Text(
                     isGu
-                        ? '💡 fast2sms.com પર સાઇન-અપ કરવાથી ₹૫૦ ના મફત ટેસ્ટિંગ ક્રેડિટ મળે છે. કોઈ ક્રેડિટ કાર્ડ જરૂરી નથી.'
-                        : '💡 Free ₹50 testing balance is provided upon sign-up at fast2sms.com. No credit card required.',
+                        ? '💡 textbee.dev પર સાઇન-અપ કરીને તમારી API કી મેળવો. તમારા Android ફોનને SMS ગેટવે તરીકે વાપરો.'
+                        : '💡 Sign up at textbee.dev and link your Android phone to use it as an SMS gateway.',
                     style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 12),
@@ -633,7 +633,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         ),
-                        onPressed: _saveFast2SmsKey,
+                        onPressed: _saveTextBeeKey,
                       ),
                       OutlinedButton.icon(
                         icon: _isTestingSms
@@ -647,9 +647,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),
-                        onPressed: _isTestingSms ? null : _testFast2Sms,
+                        onPressed: _isTestingSms ? null : _testTextBee,
                       ),
-                      if (_fast2SmsKeyController.text.isNotEmpty)
+                      if (_textBeeKeyController.text.isNotEmpty)
                         OutlinedButton.icon(
                           icon: const Icon(Icons.clear_rounded, size: 16),
                           label: Text(isGu ? 'દૂર કરો' : 'Clear'),
@@ -658,8 +658,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           ),
                           onPressed: () {
-                            _fast2SmsKeyController.clear();
-                            _saveFast2SmsKey();
+                            _textBeeKeyController.clear();
+                            _saveTextBeeKey();
                           },
                         ),
                     ],

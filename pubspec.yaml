@@ -18,6 +18,8 @@ dependencies:
   uuid: ^4.5.1
   http: ^1.6.0
   url_launcher: ^6.3.1
+  google_generative_ai: ^0.3.0   # Gemini SDK
+  flutter_dotenv: ^5.0.2   # env handling
 
 dev_dependencies:
   flutter_test:
@@ -27,3 +29,5 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  assets:
+    - .env

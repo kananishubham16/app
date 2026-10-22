@@ -174,13 +174,16 @@ class _RemedialScreenState extends State<RemedialScreen> {
           ),
         ],
       ),
-      floatingActionButton: isTeacher
+      floatingActionButton: isTeacher && teacherSubjectIds.isNotEmpty
           ? FloatingActionButton.extended(
               onPressed: () {
+                final targetSubjectId = teacherSubjectIds.isNotEmpty ? teacherSubjectIds.first : null;
                 Navigator.pushNamed(
                   context,
                   AppRouter.assignRemedial,
-                  arguments: {'studentId': _selectedStudentId},
+                  arguments: targetSubjectId != null
+                      ? {'studentId': _selectedStudentId, 'subjectId': targetSubjectId}
+                      : {'studentId': _selectedStudentId},
                 ).then((res) {
                   if (res == true) _loadData();
                 });

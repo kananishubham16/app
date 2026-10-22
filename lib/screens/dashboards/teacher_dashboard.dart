@@ -903,7 +903,16 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                     Expanded(
                       child: FilledButton.tonalIcon(
                         onPressed: () {
-                          Navigator.pushNamed(context, AppRouter.addAssessment);
+                          final user = context.read<AuthProvider>().currentUser;
+                          final teacherSubjectIds = user?.subjectIds ?? [];
+                          final targetSubjectId = teacherSubjectIds.isNotEmpty ? teacherSubjectIds.first : null;
+                          Navigator.pushNamed(
+                            context,
+                            AppRouter.addAssessment,
+                            arguments: targetSubjectId != null
+                                ? {'subjectId': targetSubjectId}
+                                : null,
+                          );
                         },
                         icon: const Icon(Icons.add_task, size: 16),
                         label: Text(

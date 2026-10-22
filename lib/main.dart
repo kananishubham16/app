@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:learning_setu/l10n/app_localizations.dart';
 
@@ -37,6 +38,11 @@ import 'package:flutter/services.dart';
 /// - Zero-overflow layouts adapted for compact to large Android viewports
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables (.env file with GEMINI_API_KEY etc.)
+  await dotenv.load(fileName: '.env').catchError((_) {
+    // .env file may not exist in production; keys can be set via Settings UI
+  });
 
   // Android Mobile specific configuration: Lock to portrait
   await SystemChrome.setPreferredOrientations([

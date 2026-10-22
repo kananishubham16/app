@@ -7,7 +7,7 @@ import 'package:learning_setu/repositories/mock/mock_school_repository.dart';
 import 'package:learning_setu/services/ai_analysis_service.dart';
 import 'package:learning_setu/services/performance_service.dart';
 import 'package:learning_setu/services/storage_service.dart';
-import 'package:learning_setu/services/fast2sms_service.dart';
+import 'package:learning_setu/services/textbee_service.dart';
 import 'package:learning_setu/mock_data/mock_data.dart';
 import 'package:learning_setu/providers/quiz_provider.dart';
 import 'package:learning_setu/providers/assessment_provider.dart';
@@ -419,16 +419,16 @@ void main() {
     });
   });
 
-  group('8. Fast2SMS Automated Messaging Service Tests', () {
+  group('8. TextBee Automated Messaging Service Tests', () {
     test('Cleans Indian phone numbers to 10 digits properly', () {
-      expect(Fast2SmsService.cleanIndianPhoneNumber('+91 98765 43210'), '9876543210');
-      expect(Fast2SmsService.cleanIndianPhoneNumber('919876543210'), '9876543210');
-      expect(Fast2SmsService.cleanIndianPhoneNumber('09876543210'), '9876543210');
-      expect(Fast2SmsService.cleanIndianPhoneNumber('98765-43210'), '9876543210');
+      expect(TextBeeService.cleanIndianPhoneNumber('+91 98765 43210'), '9876543210');
+      expect(TextBeeService.cleanIndianPhoneNumber('919876543210'), '9876543210');
+      expect(TextBeeService.cleanIndianPhoneNumber('09876543210'), '9876543210');
+      expect(TextBeeService.cleanIndianPhoneNumber('98765-43210'), '9876543210');
     });
 
     test('Validates missing API key and invalid phone length', () async {
-      final service = Fast2SmsService();
+      final service = TextBeeService();
       // Test missing key
       final resultNoKey = await service.sendSms(
         phone: '9876543210',
@@ -447,10 +447,10 @@ void main() {
       expect(resultBadPhone.message, contains('Expected 10 digits'));
     });
 
-    test('Routes textbelt key without requiring Fast2SMS key', () async {
-      final service = Fast2SmsService(apiKey: 'textbelt');
+    test('Initializes with provided API key override', () async {
+      final service = TextBeeService(apiKey: 'sample_textbee_key');
       final key = await service.getApiKey();
-      expect(key, 'textbelt');
+      expect(key, 'sample_textbee_key');
     });
   });
 
