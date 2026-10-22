@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:learning_setu/app/theme.dart';
 import 'package:learning_setu/services/deepl_translation_service.dart';
@@ -282,19 +281,19 @@ Practice Portal: https://learningsetu.gujarat.gov.in/practice
                 ),
               ),
               const SizedBox(height: 16),
-              // TextBee Automated Dispatch Button
+              // Default Single Action: Send SMS via TextBee API
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
                   icon: const Icon(Icons.bolt_rounded, size: 20),
                   label: Text(
-                    isGu ? '⚡ આપમેળે SMS મોકલો (TextBee API)' : '⚡ Auto-Send SMS (TextBee API)',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                    isGu ? '⚡ SMS મોકલો (TextBee API)' : '⚡ Send SMS via TextBee API',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFFE11D48),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                   onPressed: () async {
@@ -307,94 +306,17 @@ Practice Portal: https://learningsetu.gujarat.gov.in/practice
                   },
                 ),
               ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.sms_outlined, size: 18),
-                      label: Text(isGu ? 'SMS એપ' : 'SMS App'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 11),
-                      ),
-                      onPressed: () async {
-                        Navigator.pop(modalContext);
-                        final launched = await launchSms(
-                          phone: recipientPhone,
-                          message: message,
-                        );
-                        if (!launched && context.mounted) {
-                          Clipboard.setData(ClipboardData(text: message));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                isGu
-                                    ? 'સંદેશ કોપી થયો! તમારા મેસેજ એપમાં પેસ્ટ કરો.'
-                                    : 'Message copied! Paste it in your SMS app.',
-                              ),
-                              backgroundColor: Colors.amber.shade800,
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
-                      label: const Text('WhatsApp'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF25D366),
-                        side: const BorderSide(color: Color(0xFF25D366)),
-                        padding: const EdgeInsets.symmetric(vertical: 11),
-                      ),
-                      onPressed: () async {
-                        Navigator.pop(modalContext);
-                        final launched = await launchWhatsApp(
-                          phone: recipientPhone,
-                          message: message,
-                        );
-                        if (!launched && context.mounted) {
-                          Clipboard.setData(ClipboardData(text: message));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                isGu
-                                    ? 'સંદેશ કોપી થયો! WhatsApp માં પેસ્ટ કરો.'
-                                    : 'Message copied! Paste it in WhatsApp.',
-                              ),
-                              backgroundColor: Colors.amber.shade800,
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                ],
-              ),
               const SizedBox(height: 8),
               Center(
-                child: TextButton.icon(
-                  icon: const Icon(Icons.copy_rounded, size: 16),
-                  label: Text(
-                    isGu ? 'સંદેશ કોપી કરો' : 'Copy Message to Clipboard',
-                    style: const TextStyle(fontSize: 12),
+                child: TextButton(
+                  onPressed: () => Navigator.pop(modalContext),
+                  child: Text(
+                    isGu ? 'રદ કરો' : 'Cancel',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                    ),
                   ),
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: message));
-                    Navigator.pop(modalContext);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          isGu
-                              ? 'દ્વિભાષી સંદેશ ક્લિપબોર્ડ પર કોપી થયો!'
-                              : 'Bilingual message copied to clipboard!',
-                        ),
-                        backgroundColor: Colors.green.shade700,
-                      ),
-                    );
-                  },
                 ),
               ),
             ],
