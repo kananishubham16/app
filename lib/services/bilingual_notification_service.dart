@@ -2,11 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:learning_setu/app/theme.dart';
+import 'package:learning_setu/services/deepl_translation_service.dart';
 import 'package:learning_setu/services/textbee_service.dart';
 
 /// Service responsible for constructing bilingual (English + Gujarati) notification
 /// messages for student assessment results, quiz marks, and remedial alerts.
 class BilingualNotificationService {
+  /// Translates text using DeepL Translation API (defaults to Gujarati)
+  static Future<String> translateWithDeepL(String text, {String targetLang = 'GU'}) async {
+    final deepl = DeeplTranslationService();
+    final res = await deepl.translate(text: text, targetLang: targetLang);
+    if (res.success && res.translatedText.isNotEmpty) {
+      return res.translatedText;
+    }
+    return text;
+  }
+
   /// Maps English subject IDs/names to Gujarati translations
   static String getGujaratiSubjectName(String subjectNameOrId) {
     final lower = subjectNameOrId.toLowerCase();

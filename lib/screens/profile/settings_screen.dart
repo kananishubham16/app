@@ -11,6 +11,7 @@ import 'package:learning_setu/providers/remedial_provider.dart';
 import 'package:learning_setu/providers/student_provider.dart';
 import 'package:learning_setu/services/storage_service.dart';
 import 'package:learning_setu/services/ai_analysis_service.dart';
+import 'package:learning_setu/services/deepl_translation_service.dart';
 import 'package:learning_setu/services/textbee_service.dart';
 
 /// Settings screen for configuring language preferences (English / Gujarati),
@@ -32,6 +33,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _obscureTextBeeKey = true;
   bool _isTestingSms = false;
   bool _isCheckingDevice = false;
+  final _deeplKeyController = TextEditingController();
+  bool _obscureDeeplKey = true;
+  bool _isTestingDeepl = false;
 
   @override
   void initState() {
@@ -45,11 +49,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final textBee = TextBeeService();
     final smsKey = await textBee.getApiKey();
     final devId = await textBee.getDeviceId();
+    final deepl = DeeplTranslationService();
+    final deeplKey = await deepl.getApiKey();
     if (mounted) {
       setState(() {
         if (key != null) _apiKeyController.text = key;
         if (smsKey != null) _textBeeKeyController.text = smsKey;
         _textBeeDeviceIdController.text = devId;
+        _deeplKeyController.text = deeplKey;
       });
     }
   }
@@ -59,6 +66,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _apiKeyController.dispose();
     _textBeeKeyController.dispose();
     _textBeeDeviceIdController.dispose();
+    _deeplKeyController.dispose();
     super.dispose();
   }
 
@@ -220,6 +228,102 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: result.success ? Colors.green.shade700 : Colors.red.shade700,
       ),
     );
+  }
+
+  Future<void> _saveDeeplKey() async {
+    final isGu = Localizations.localeOf(context).languageCode == 'gu';
+    final text = _deeplKeyController.text.trim();
+    final deepl = DeeplTranslationService();
+    await deepl.setApiKey(text.isEmpty ? null : text);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            text.isEmpty
+                ? (isGu ? 'DeepL API કી દૂર કરવામાં આવી' : 'DeepL API Key cleared')
+                : (isGu ? 'DeepL API કી સફળતાપૂર્વક સાચવવામાં આવી' : 'DeepL API Key saved successfully'),
+          ),
+          backgroundColor: const Color(0xFF0F2B48),
+        ),
+      );
+      setState(() {});
+    }
+  }
+
+  Future<void> _testDeeplTranslation() async {
+    final isGu = Localizations.localeOf(context).languageCode == 'gu';
+    final key = _deeplKeyController.text.trim();
+    if (key.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isGu ? 'કૃપા કરીને પહેલાં DeepL API કી દાખલ કરો' : 'Please enter a DeepL API Key first'),
+          backgroundColor: Colors.amber.shade800,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isTestingDeepl = true);
+    final deepl = DeeplTranslationService(apiKey: key);
+    const sampleText = 'Welcome to Learning Setu! Student progress is our priority.';
+    final result = await deepl.translateToGujarati(sampleText);
+
+    if (!mounted) return;
+    setState(() => _isTestingDeepl = false);
+
+    if (result.success) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              const Icon(Icons.translate_rounded, color: Color(0xFF0F2B48)),
+              const SizedBox(width: 8),
+              Text(
+                isGu ? 'DeepL અનુવાદ સફળ!' : 'DeepL Translation Success!',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Original (English):',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 4),
+              const Text(sampleText, style: TextStyle(fontSize: 13)),
+              const Divider(height: 20),
+              const Text(
+                'Translated (Gujarati / ગુજરાતી):',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                result.translatedText,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF0F2B48)),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(isGu ? 'બરાબર' : 'OK'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.errorMessage ?? 'DeepL Translation failed'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+    }
   }
 
   Future<void> _resetDemoData() async {
@@ -541,6 +645,166 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onPressed: () {
                             _apiKeyController.clear();
                             _saveApiKey();
+                          },
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // DeepL Translation Engine Configuration Section
+          Text(
+            isGu ? 'DeepL બહુભાષી અનુવાદક (DeepL Translator API)' : 'DeepL Multilingual Translator (DeepL API)',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            elevation: 0.5,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+              side: const BorderSide(color: Color(0xFFBAE6FD)), // Light sky blue border
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE0F2FE),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.translate_rounded,
+                          color: Color(0xFF0284C7),
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Flexible(
+                                  child: Text(
+                                    'DeepL API Free',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: Colors.blue.shade300),
+                                  ),
+                                  child: Text(
+                                    isGu ? 'ગુજરાતી સપોર્ટેડ' : 'Gujarati & English',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue.shade800,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isGu
+                                  ? 'શિક્ષકની નોંધો અને અહેવાલોનું અંગ્રેજી-ગુજરાતીમાં આપમેળે સચોટ ભાષાંતર'
+                                  : 'High-accuracy neural translation for teacher notes & notifications',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: _deeplKeyController,
+                    obscureText: _obscureDeeplKey,
+                    decoration: InputDecoration(
+                      labelText: isGu ? 'DeepL API કી' : 'DeepL API Key',
+                      hintText: 'e.g. 84c3da37-...:fx',
+                      prefixIcon: const Icon(Icons.key_rounded, size: 20),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureDeeplKey ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                          size: 20,
+                        ),
+                        onPressed: () => setState(() => _obscureDeeplKey = !_obscureDeeplKey),
+                      ),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      isDense: true,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    isGu
+                        ? '💡 DeepL API Free દ્વારા દર મહિને ૫,૦૦,૦૦૦ અક્ષરો મફતમાં ભાષાંતર કરી શકાય છે.'
+                        : '💡 DeepL API Free provides 500,000 characters/month for automated neural translation.',
+                    style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.save_rounded, size: 16),
+                        label: Text(l10n?.save ?? (isGu ? 'સાચવો' : 'Save')),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0284C7),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        ),
+                        onPressed: _saveDeeplKey,
+                      ),
+                      OutlinedButton.icon(
+                        icon: _isTestingDeepl
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.translate_rounded, size: 16),
+                        label: Text(isGu ? 'ટેસ્ટ અનુવાદ (ગુજરાતી)' : 'Test Translation (GU)'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                        onPressed: _isTestingDeepl ? null : _testDeeplTranslation,
+                      ),
+                      if (_deeplKeyController.text.isNotEmpty)
+                        OutlinedButton.icon(
+                          icon: const Icon(Icons.clear_rounded, size: 16),
+                          label: Text(isGu ? 'દૂર કરો' : 'Clear'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.red.shade700,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          ),
+                          onPressed: () {
+                            _deeplKeyController.clear();
+                            _saveDeeplKey();
                           },
                         ),
                     ],
