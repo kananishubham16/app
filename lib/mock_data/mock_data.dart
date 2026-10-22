@@ -246,7 +246,7 @@ class MockData {
       id: 'user_parent',
       name: 'Suresh Kumar',
       email: 'parent@demo.com',
-      phone: '+91 98255 67097',
+      phone: '+91 90235 11487',
       role: UserRole.parent,
       childrenIds: ['student_1', 'student_2'],
       avatarInitials: 'SK',
@@ -532,7 +532,7 @@ class MockData {
       schoolName: 'GPS Sector 7 Primary School',
       parentId: 'user_parent',
       parentName: 'Suresh Kumar',
-      parentPhone: '+91 98255 67097',
+      parentPhone: '+91 90235 11487',
     ),
     const StudentModel(
       id: 'student_2',
@@ -545,7 +545,7 @@ class MockData {
       schoolName: 'GPS Sector 7 Primary School',
       parentId: 'user_parent',
       parentName: 'Suresh Kumar',
-      parentPhone: '+91 98255 67097',
+      parentPhone: '+91 90235 11487',
     ),
     const StudentModel(
       id: 'student_3',

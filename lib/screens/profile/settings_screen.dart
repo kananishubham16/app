@@ -148,7 +148,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
 
-    final phoneController = TextEditingController(text: '9825567097');
+    final phoneController = TextEditingController(text: '9023511487');
     final targetPhone = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
