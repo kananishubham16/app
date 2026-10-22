@@ -98,6 +98,58 @@ View Full Report: https://learningsetu.gujarat.gov.in/r/${studentName.replaceAll
 - Teacher Contact / શિક્ષક સંપર્ક: +91 98796 67097''';
   }
 
+  /// Generates a bilingual message for remedial action / home practice assignment
+  static String buildBilingualRemedialAlertMessage({
+    required String studentName,
+    required String className,
+    required String subjectName,
+    required String topicName,
+    required String activityDescription,
+    required DateTime dueDate,
+    required String schoolName,
+    String? parentInstruction,
+    String? teacherNote,
+  }) {
+    final subjectGu = getGujaratiSubjectName(subjectName);
+    final schoolGu = getGujaratiSchoolName(schoolName);
+    final formattedDate = '${dueDate.day}/${dueDate.month}/${dueDate.year}';
+
+    final parentInstEn = parentInstruction != null && parentInstruction.isNotEmpty
+        ? '\nHome Practice: $parentInstruction'
+        : '';
+    final parentInstGu = parentInstruction != null && parentInstruction.isNotEmpty
+        ? '\nઘરકામ સૂચના: $parentInstruction'
+        : '';
+
+    final teacherNoteEn = teacherNote != null && teacherNote.isNotEmpty
+        ? '\nTeacher Note: $teacherNote'
+        : '';
+    final teacherNoteGu = teacherNote != null && teacherNote.isNotEmpty
+        ? '\nશિક્ષકની નોંધ: $teacherNote'
+        : '';
+
+    return '''Learning Setu Remedial Alert / ઉપચારાત્મક શિક્ષણ સૂચના 🎯
+
+Dear Parent, a targeted remedial practice task has been assigned for $studentName (Class $className):
+Subject: $subjectName
+Topic: $topicName
+Activity: $activityDescription
+Due Date: $formattedDate$parentInstEn$teacherNoteEn
+Please guide your child to practice this topic at home.
+
+---
+
+પ્રિય વાલી, તમારા બાળક $studentName (ધોરણ $className) માટે ઉપચારાત્મક શિક્ષણ પ્રવૃત્તિ સોંપેલ છે:
+વિષય: $subjectGu
+વિષયાંગ: $topicName
+પ્રવૃત્તિ: $activityDescription
+પૂર્ણ કરવાની છેલ્લી તારીખ: $formattedDate$parentInstGu$teacherNoteGu
+કૃપા કરીને ઘરે આ વિષયાંગનો મહાવરો કરાવવામાં બાળકને માર્ગદર્શન આપો.
+
+- $schoolName / $schoolGu
+- Teacher Contact / શિક્ષક સંપર્ક: +91 98796 67097''';
+  }
+
   /// Generates a bilingual message for quiz completion
   static String buildBilingualQuizMessage({
     required String studentName,

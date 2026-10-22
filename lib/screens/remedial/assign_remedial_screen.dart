@@ -13,6 +13,7 @@ import 'package:learning_setu/providers/auth_provider.dart';
 import 'package:learning_setu/providers/remedial_provider.dart';
 import 'package:learning_setu/providers/school_provider.dart';
 import 'package:learning_setu/providers/student_provider.dart';
+import 'package:learning_setu/services/bilingual_notification_service.dart';
 
 /// Form screen enabling educators to assign targeted remedial interventions,
 /// select preset pedagogical activities or create custom tasks, set due dates,
@@ -49,6 +50,7 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
       TextEditingController();
 
   bool _includeQuiz = true;
+  bool _notifyParentViaSms = true;
   DateTime _dueDate = DateTime.now().add(const Duration(days: 7));
   bool _isSaving = false;
   bool _initialized = false;
@@ -238,6 +240,11 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
     );
 
     final remedialProv = context.read<RemedialProvider>();
+    final studentProv = context.read<StudentProvider>();
+    final student = studentProv.students
+        .where((s) => s.id == _selectedStudentId)
+        .firstOrNull;
+
     final success = await remedialProv.addRemedial(action);
 
     if (mounted) {
@@ -246,15 +253,51 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
       });
 
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Remedial action assigned for ${topic?.name ?? "student"}!',
+        if (_notifyParentViaSms &&
+            student != null &&
+            student.parentPhone != null &&
+            student.parentPhone!.isNotEmpty) {
+          final bilingualMessage =
+              BilingualNotificationService.buildBilingualRemedialAlertMessage(
+            studentName: student.name,
+            className: student.className,
+            subjectName: subject?.name ?? 'General',
+            topicName: topic?.name ?? 'Topic Review',
+            activityDescription: activityText,
+            dueDate: _dueDate,
+            schoolName: student.schoolName,
+            parentInstruction: _parentInstructionController.text.trim().isEmpty
+                ? null
+                : _parentInstructionController.text.trim(),
+            teacherNote: _teacherNoteController.text.trim().isEmpty
+                ? null
+                : _teacherNoteController.text.trim(),
+          );
+
+          await BilingualNotificationService.showMessageModal(
+            context: context,
+            title: isGu
+                ? 'વાલીને ઉપચારાત્મક સૂચના મોકલો'
+                : 'Notify Parent of Remedial Task',
+            recipientName: student.parentName ?? student.name,
+            recipientPhone: student.parentPhone!,
+            message: bilingualMessage,
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                isGu
+                    ? '${topic?.name ?? "વિદ્યાર્થી"} માટે ઉપચારાત્મક કાર્ય સોંપાયું!'
+                    : 'Remedial action assigned for ${topic?.name ?? "student"}!',
+              ),
+              backgroundColor: Colors.green.shade700,
             ),
-            backgroundColor: Colors.green.shade700,
-          ),
-        );
-        Navigator.pop(context, true);
+          );
+        }
+        if (mounted) {
+          Navigator.pop(context, true);
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -746,6 +789,51 @@ class _AssignRemedialScreenState extends State<AssignRemedialScreen> {
               maxLines: 2,
               decoration: const InputDecoration(
                 hintText: 'Internal note for progress tracking and peer discussions...',
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Parent SMS Notification Switch Card
+            Material(
+              color: AppColors.primaryContainer.withOpacity(0.35),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.primary.withOpacity(0.2),
+                  ),
+                ),
+                child: SwitchListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 4,
+                  ),
+                  secondary: const Icon(
+                    Icons.mark_email_read_rounded,
+                    color: AppColors.primary,
+                  ),
+                  title: Text(
+                    isGu ? 'વાલીને આપમેળે SMS સૂચના' : 'Notify Parent via SMS',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  subtitle: Text(
+                    isGu
+                        ? 'સાચવ્યા પછી વાલીના ફોન પર દ્વિભાષી સૂચના મોકલો'
+                        : 'Send bilingual home practice alert after saving',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  value: _notifyParentViaSms,
+                  onChanged: (val) {
+                    setState(() {
+                      _notifyParentViaSms = val;
+                    });
+                  },
+                ),
               ),
             ),
             const SizedBox(height: 32),
