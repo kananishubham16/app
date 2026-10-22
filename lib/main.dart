@@ -15,12 +15,7 @@ import 'package:learning_setu/providers/school_provider.dart';
 import 'package:learning_setu/providers/locale_provider.dart';
 import 'package:learning_setu/providers/parent_review_provider.dart';
 
-import 'package:learning_setu/repositories/mock/mock_auth_repository.dart';
-import 'package:learning_setu/repositories/mock/mock_student_repository.dart';
-import 'package:learning_setu/repositories/mock/mock_assessment_repository.dart';
-import 'package:learning_setu/repositories/mock/mock_quiz_repository.dart';
-import 'package:learning_setu/repositories/mock/mock_remedial_repository.dart';
-import 'package:learning_setu/repositories/mock/mock_school_repository.dart';
+import 'package:learning_setu/repositories/repositories.dart';
 
 import 'package:learning_setu/services/performance_service.dart';
 import 'package:learning_setu/services/storage_service.dart';
@@ -65,42 +60,66 @@ void main() async {
 }
 
 class LearningSetu extends StatelessWidget {
-  const LearningSetu({super.key});
+  final AuthRepository? authRepo;
+  final StudentRepository? studentRepo;
+  final AssessmentRepository? assessmentRepo;
+  final QuizRepository? quizRepo;
+  final RemedialRepository? remedialRepo;
+  final SchoolRepository? schoolRepo;
+
+  const LearningSetu({
+    super.key,
+    this.authRepo,
+    this.studentRepo,
+    this.assessmentRepo,
+    this.quizRepo,
+    this.remedialRepo,
+    this.schoolRepo,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // Initialize repositories (mock implementations)
-    final authRepo = MockAuthRepository();
-    final studentRepo = MockStudentRepository();
-    final assessmentRepo = MockAssessmentRepository();
-    final quizRepo = MockQuizRepository();
-    final remedialRepo = MockRemedialRepository();
-    final schoolRepo = MockSchoolRepository();
+    final useLiveApi = dotenv.env['USE_LIVE_API'] == 'true';
+    final apiClient = ApiClient();
+
+    // Initialize repositories (live API or mock fallback)
+    final effectiveAuthRepo = authRepo ??
+        (useLiveApi ? ApiAuthRepository(client: apiClient) : MockAuthRepository());
+    final effectiveStudentRepo = studentRepo ??
+        (useLiveApi ? ApiStudentRepository(client: apiClient) : MockStudentRepository());
+    final effectiveAssessmentRepo = assessmentRepo ??
+        (useLiveApi ? ApiAssessmentRepository(client: apiClient) : MockAssessmentRepository());
+    final effectiveQuizRepo = quizRepo ??
+        (useLiveApi ? ApiQuizRepository(client: apiClient) : MockQuizRepository());
+    final effectiveRemedialRepo = remedialRepo ??
+        (useLiveApi ? ApiRemedialRepository(client: apiClient) : MockRemedialRepository());
+    final effectiveSchoolRepo = schoolRepo ??
+        (useLiveApi ? ApiSchoolRepository(client: apiClient) : MockSchoolRepository());
 
     // Initialize services
     final storageService = StorageService();
-    final performanceService = PerformanceService(assessmentRepo, schoolRepo);
+    final performanceService = PerformanceService(effectiveAssessmentRepo, effectiveSchoolRepo);
 
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ChangeNotifierProvider(
-          create: (_) => AuthProvider(authRepo, storageService),
+          create: (_) => AuthProvider(effectiveAuthRepo, storageService),
         ),
-        ChangeNotifierProvider(create: (_) => StudentProvider(studentRepo)),
+        ChangeNotifierProvider(create: (_) => StudentProvider(effectiveStudentRepo)),
         ChangeNotifierProvider(
-          create: (_) => AssessmentProvider(assessmentRepo, storageService),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => QuizProvider(quizRepo, storageService),
+          create: (_) => AssessmentProvider(effectiveAssessmentRepo, storageService),
         ),
         ChangeNotifierProvider(
-          create: (_) => RemedialProvider(remedialRepo, storageService),
+          create: (_) => QuizProvider(effectiveQuizRepo, storageService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => RemedialProvider(effectiveRemedialRepo, storageService),
         ),
         ChangeNotifierProvider(
           create: (_) => PerformanceProvider(performanceService),
         ),
-        ChangeNotifierProvider(create: (_) => SchoolProvider(schoolRepo)),
+        ChangeNotifierProvider(create: (_) => SchoolProvider(effectiveSchoolRepo)),
         ChangeNotifierProvider(
           create: (_) => ParentReviewProvider(storageService),
         ),
