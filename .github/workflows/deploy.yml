@@ -7,18 +7,9 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -33,17 +24,25 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Ensure fallback .env exists
+        run: |
+          if [ ! -f .env ]; then
+            echo "GEMINI_API_KEY=" > .env
+            echo "TEXTBEE_DEVICE_ID=" >> .env
+            echo "DEEPL_API_KEY=" >> .env
+            echo "API_BASE_URL=http://localhost:5000/api/v1" >> .env
+            echo "USE_LIVE_API=false" >> .env
+          fi
+
       - name: Build Web
         run: |
           flutter build web --release --base-href "/app/"
           cp build/web/index.html build/web/404.html
           touch build/web/.nojekyll
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: 'build/web'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
+          publish_branch: gh-pages
