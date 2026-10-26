@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:learning_setu/l10n/app_localizations.dart';
@@ -27,34 +28,40 @@ import 'package:flutter/services.dart';
 ///
 /// Problem ID: PS000060 | SFIC Hackathon 2026
 ///
-/// Redesigned specifically for Android Mobile:
+/// Redesigned specifically for Android Mobile & Web:
 /// - Locked to portrait mode for standard Android phones
 /// - Material 3 system bar integration with transparent navigation
-/// - Zero-overflow layouts adapted for compact to large Android viewports
+/// - Zero-overflow layouts adapted for compact to large viewports
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Load environment variables (.env file with GEMINI_API_KEY etc.)
-  await dotenv.load(fileName: '.env').catchError((_) {
-    // .env file may not exist in production; keys can be set via Settings UI
-  });
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {
+    // .env file may not exist in production/web; keys can be set via Settings UI
+  }
 
-  // Android Mobile specific configuration: Lock to portrait
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+  // Mobile specific configuration: Lock to portrait (safely ignored on web)
+  try {
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+  } catch (_) {}
 
-  // Android Material 3 system UI overlay style
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-      systemNavigationBarColor: Colors.white,
-      systemNavigationBarIconBrightness: Brightness.dark,
-      systemNavigationBarDividerColor: Colors.transparent,
-    ),
-  );
+  // System UI overlay style
+  try {
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+        systemNavigationBarDividerColor: Colors.transparent,
+      ),
+    );
+  } catch (_) {}
 
   runApp(const LearningSetu());
 }
@@ -79,10 +86,21 @@ class LearningSetu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final useLiveApi = dotenv.env['USE_LIVE_API'] == 'true';
+    bool useLiveApi = false;
+    try {
+      if (dotenv.isInitialized) {
+        useLiveApi = dotenv.env['USE_LIVE_API'] == 'true';
+      }
+    } catch (_) {}
+
+    // On Web (GitHub Pages / browser), default to complete standalone offline mock mode
+    if (kIsWeb) {
+      useLiveApi = false;
+    }
+
     final apiClient = ApiClient();
 
-    // Initialize repositories (live API or mock fallback)
+    // Initialize repositories (live API with automatic mock fallback)
     final effectiveAuthRepo = authRepo ??
         (useLiveApi ? ApiAuthRepository(client: apiClient) : MockAuthRepository());
     final effectiveStudentRepo = studentRepo ??

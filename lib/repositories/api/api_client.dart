@@ -23,10 +23,14 @@ class ApiClient {
         _httpClient = httpClient ?? http.Client();
 
   static String _resolveDefaultBaseUrl() {
-    final envUrl = dotenv.env['API_BASE_URL'];
-    if (envUrl != null && envUrl.isNotEmpty) {
-      return envUrl;
-    }
+    try {
+      if (dotenv.isInitialized) {
+        final envUrl = dotenv.env['API_BASE_URL'];
+        if (envUrl != null && envUrl.isNotEmpty) {
+          return envUrl;
+        }
+      }
+    } catch (_) {}
     if (kIsWeb) {
       return 'http://localhost:5000/api/v1';
     }
