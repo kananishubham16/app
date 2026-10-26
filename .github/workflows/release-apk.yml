@@ -1,0 +1,69 @@
+name: Build & Release Android APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Ensure fallback .env exists
+        run: |
+          if [ ! -f .env ]; then
+            echo "GEMINI_API_KEY=" > .env
+            echo "TEXTBEE_DEVICE_ID=" >> .env
+            echo "DEEPL_API_KEY=" >> .env
+            echo "API_BASE_URL=http://localhost:5000/api/v1" >> .env
+            echo "USE_LIVE_API=false" >> .env
+          fi
+
+      - name: Build Android Release APK
+        run: flutter build apk --release
+
+      - name: Upload APK as Workflow Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: learning-setu-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          name: "Learning Setu Release ${{ github.ref_name }}"
+          tag_name: ${{ github.ref_name != '' && github.ref_name || 'v1.0.0' }}
+          files: build/app/outputs/flutter-apk/app-release.apk
+          draft: false
+          prerelease: false
+          body: |
+            ### Learning Setu (લર્નિંગ સેતુ) Android APK Release
+            
+            Download and install the APK directly on any Android device.
+            - **File**: `app-release.apk`
+            - **Platform**: Universal Android (ARMv7, ARM64, x86_64)
+            - **Bilingual**: English & Gujarati
+            - **Features**: Complete offline mock data fallback, multi-role dashboard (Teacher, Principal, BRC, Parent).
