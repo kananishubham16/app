@@ -20,8 +20,9 @@ class AiAnalysisResult {
 }
 
 /// Service providing AI-powered performance diagnostics.
-/// Uses Google Gemini SDK when online & configured,
-/// with an intelligent pedagogical synthesis fallback for offline/demo reliability.
+/// Uses a Hybrid Architecture:
+/// 1. Cloud AI: Google Gemini SDK (Gemini Flash)
+/// 2. Offline Heuristics: Cognitive Pedagogical AI engine
 class AiAnalysisService {
   static const String _geminiApiKeyPrefKey = 'gemini_api_key';
   static const String _modelName = 'Gemini Flash';
@@ -87,28 +88,33 @@ class AiAnalysisService {
       return _generateUnassessedResult(languageCode, totalSubjects);
     }
 
-    // 2. Check for configured Gemini API key
+    final promptText = _buildStudentPrompt(
+      overallPercentage: overallPercentage,
+      weakTopics: weakTopics,
+      subjectsAssessed: subjectsAssessed,
+      totalSubjects: totalSubjects,
+      subjectPerformances: subjectPerformances,
+      languageCode: languageCode,
+    );
+
     final apiKey = await getApiKey();
+
+    // 1. Cloud Gemini
     if (apiKey != null && apiKey.isNotEmpty) {
       try {
-        final onlineResult = await _callGeminiApi(
+        final onlineResult = await _callGeminiApiWithPrompt(
           apiKey: apiKey,
-          overallPercentage: overallPercentage,
-          weakTopics: weakTopics,
-          subjectsAssessed: subjectsAssessed,
-          totalSubjects: totalSubjects,
-          subjectPerformances: subjectPerformances,
-          languageCode: languageCode,
+          promptText: promptText,
         );
         if (onlineResult != null) {
           return onlineResult;
         }
       } catch (e) {
-        // Fall through to offline pedagogical AI engine on error or timeout
+        debugPrint('Cloud Gemini failed, attempting fallback: $e');
       }
     }
 
-    // 3. Fallback: Intelligent Cognitive Pedagogical AI
+    // 2. Deterministic Cognitive Pedagogical AI Fallback
     return _generatePedagogicalFallback(
       overallPercentage: overallPercentage,
       weakTopics: weakTopics,
@@ -117,6 +123,48 @@ class AiAnalysisService {
       subjectPerformances: subjectPerformances,
       languageCode: languageCode,
     );
+  }
+
+  String _buildStudentPrompt({
+    required double overallPercentage,
+    required List<String> weakTopics,
+    required int subjectsAssessed,
+    required int totalSubjects,
+    required List<SubjectPerformance> subjectPerformances,
+    required String languageCode,
+  }) {
+    final subjectsSummary = subjectPerformances.map((s) {
+      final scoreStr = s.latestPercentage != null
+          ? '${s.latestPercentage!.toStringAsFixed(1)}%'
+          : 'Not assessed';
+      return '${s.subjectName}: $scoreStr (${s.level.name})';
+    }).join('; ');
+
+    return '''
+You are an expert primary school educational psychologist and pedagogy specialist for Gujarat primary schools.
+Analyze this student's diagnostic test data and provide a constructive, actionable diagnostic summary and specific intervention steps.
+
+Student Metrics:
+- Overall Score: ${overallPercentage.toStringAsFixed(1)}%
+- Subjects Assessed: $subjectsAssessed of $totalSubjects
+- Subject Details: $subjectsSummary
+- Critical Learning Gaps / Weak Topics: ${weakTopics.isEmpty ? 'None' : weakTopics.join(', ')}
+- Target Output Language: ${languageCode == 'gu' ? 'Gujarati (ગુજરાતી)' : 'English'}
+
+Important Instructions:
+1. Include the exact phrase "$subjectsAssessed of $totalSubjects subjects assessed" in the summary.
+2. Growth-Mindset Compliment & Encouragement Tone Guidelines:
+   - For high-performing students (≥70%): Motivate conceptual brilliance, celebrate diligence, and challenge them to stretch their curiosity with advanced enrichment (HOTS) and creative problem solving.
+   - For struggling / weak students (<40%): Avoid hollow praise that leads to complacency, but never use deficit, harsh, or demotivating labels. Warmly and constructively encourage persistence, diligent daily effort, and step-by-step foundational practice.
+   - For developing students (40-69%): Acknowledge steady progress and provide targeted revision areas to unlock top mastery.
+3. The summary must explain the underlying cognitive barrier for the weak topics and suggest positive reinforcement.
+4. Provide 3 to 4 specific, actionable, grade-appropriate remedial interventions.
+5. Respond ONLY with a valid JSON object matching this schema:
+{
+  "summary": "String",
+  "recommendedActions": ["String", "String", "String"]
+}
+''';
   }
 
   AiAnalysisResult _generateUnassessedResult(String languageCode, int total) {
@@ -147,50 +195,11 @@ class AiAnalysisService {
     );
   }
 
-  /// Calls the Gemini API via the official google_generative_ai SDK
-  /// with structured JSON output instructions.
-  Future<AiAnalysisResult?> _callGeminiApi({
+  /// Low-level execution for Cloud Gemini with structured prompt
+  Future<AiAnalysisResult?> _callGeminiApiWithPrompt({
     required String apiKey,
-    required double overallPercentage,
-    required List<String> weakTopics,
-    required int subjectsAssessed,
-    required int totalSubjects,
-    required List<SubjectPerformance> subjectPerformances,
-    required String languageCode,
+    required String promptText,
   }) async {
-    final subjectsSummary = subjectPerformances.map((s) {
-      final scoreStr = s.latestPercentage != null
-          ? '${s.latestPercentage!.toStringAsFixed(1)}%'
-          : 'Not assessed';
-      return '${s.subjectName}: $scoreStr (${s.level.name})';
-    }).join('; ');
-
-    final promptText = '''
-You are an expert primary school educational psychologist and pedagogy specialist for Gujarat primary schools.
-Analyze this student's diagnostic test data and provide a constructive, actionable diagnostic summary and specific intervention steps.
-
-Student Metrics:
-- Overall Score: ${overallPercentage.toStringAsFixed(1)}%
-- Subjects Assessed: $subjectsAssessed of $totalSubjects
-- Subject Details: $subjectsSummary
-- Critical Learning Gaps / Weak Topics: ${weakTopics.isEmpty ? 'None' : weakTopics.join(', ')}
-- Target Output Language: ${languageCode == 'gu' ? 'Gujarati (ગુજરાતી)' : 'English'}
-
-Important Instructions:
-1. Include the exact phrase "$subjectsAssessed of $totalSubjects subjects assessed" in the summary.
-2. Growth-Mindset Compliment & Encouragement Tone Guidelines:
-   - For high-performing students (≥70%): Motivate conceptual brilliance, celebrate diligence, and challenge them to stretch their curiosity with advanced enrichment (HOTS) and creative problem solving.
-   - For struggling / weak students (<40%): Avoid hollow praise that leads to complacency, but never use deficit, harsh, or demotivating labels. Warmly and constructively encourage persistence, diligent daily effort, and step-by-step foundational practice.
-   - For developing students (40-69%): Acknowledge steady progress and provide targeted revision areas to unlock top mastery.
-3. The summary must explain the underlying cognitive barrier for the weak topics and suggest positive reinforcement.
-4. Provide 3 to 4 specific, actionable, grade-appropriate remedial interventions.
-5. Respond ONLY with a valid JSON object matching this schema:
-{
-  "summary": "String",
-  "recommendedActions": ["String", "String", "String"]
-}
-''';
-
     try {
       final gemini = GeminiService(apiKey: apiKey);
       final jsonText = await gemini
@@ -216,9 +225,8 @@ Important Instructions:
     return null;
   }
 
-  /// Calls the Gemini API for institutional / school-level BRC diagnostics.
-  Future<AiAnalysisResult?> _callGeminiSchoolApi({
-    required String apiKey,
+  /// Builds structured prompt for school/institutional BRC diagnostics
+  String _buildSchoolPrompt({
     required String schoolId,
     required String schoolName,
     required double overallPercentage,
@@ -227,8 +235,8 @@ Important Instructions:
     required List<String> criticalGapTopics,
     required int totalClasses,
     required String languageCode,
-  }) async {
-    final promptText = '''
+  }) {
+    return '''
 You are a senior primary education administrator and institutional auditor for Gujarat primary schools (BRC level).
 Analyze this school's assessment coverage and academic mastery data to provide an executive institutional diagnostic and concrete administrative interventions.
 
@@ -250,30 +258,6 @@ Instructions:
   "recommendedActions": ["String", "String", "String"]
 }
 ''';
-
-    try {
-      final gemini = GeminiService(apiKey: apiKey);
-      final jsonText = await gemini
-          .generateJson(promptText, temperature: 0.3, maxTokens: 800)
-          .timeout(const Duration(seconds: 10));
-
-      final parsed = jsonDecode(jsonText);
-      final summary = parsed['summary'] as String?;
-      final actions = (parsed['recommendedActions'] as List?)?.cast<String>();
-
-      if (summary != null && actions != null && actions.isNotEmpty) {
-        return AiAnalysisResult(
-          summary: summary,
-          recommendedActions: actions,
-          isOnlineAi: true,
-          modelName: _modelName,
-        );
-      }
-    } catch (e) {
-      debugPrint('Gemini school API call failed: $e');
-    }
-
-    return null;
   }
 
   /// Generates deep pedagogical synthesis offline.
@@ -441,23 +425,29 @@ Instructions:
     String languageCode = 'en',
     bool forceRefresh = false,
   }) async {
+    final promptText = _buildSchoolPrompt(
+      schoolId: schoolId,
+      schoolName: schoolName,
+      overallPercentage: overallPercentage,
+      coveragePercentage: coveragePercentage,
+      remedialCompletionRate: remedialCompletionRate,
+      criticalGapTopics: criticalGapTopics,
+      totalClasses: totalClasses,
+      languageCode: languageCode,
+    );
+
     final apiKey = await getApiKey();
+
+    // 1. Cloud Gemini AI
     if (apiKey != null && apiKey.isNotEmpty) {
       try {
-        final onlineResult = await _callGeminiSchoolApi(
+        final onlineResult = await _callGeminiApiWithPrompt(
           apiKey: apiKey,
-          schoolId: schoolId,
-          schoolName: schoolName,
-          overallPercentage: overallPercentage,
-          coveragePercentage: coveragePercentage,
-          remedialCompletionRate: remedialCompletionRate,
-          criticalGapTopics: criticalGapTopics,
-          totalClasses: totalClasses,
-          languageCode: languageCode,
+          promptText: promptText,
         );
         if (onlineResult != null) return onlineResult;
       } catch (e) {
-        debugPrint('Gemini school analysis failed, falling back: $e');
+        debugPrint('Gemini school analysis failed, attempting fallback: $e');
       }
     }
 

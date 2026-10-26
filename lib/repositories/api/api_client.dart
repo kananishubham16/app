@@ -28,17 +28,17 @@ class ApiClient {
       return envUrl;
     }
     if (kIsWeb) {
-      return 'http://localhost:8000/api';
+      return 'http://localhost:5000/api/v1';
     }
     try {
       if (Platform.isAndroid) {
         // Standard Android emulator loopback to host machine
-        return 'http://10.0.2.2:8000/api';
+        return 'http://10.0.2.2:5000/api/v1';
       }
     } catch (_) {
       // Fallback
     }
-    return 'http://localhost:8000/api';
+    return 'http://localhost:5000/api/v1';
   }
 
   Map<String, String> get _headers => {
@@ -73,8 +73,15 @@ class ApiClient {
   }
 
   Uri _buildUri(String path, Map<String, dynamic>? queryParameters) {
-    final cleanPath = path.startsWith('/') ? path.substring(1) : path;
-    final base = baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
+    var cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    var base = baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
+
+    if (base.endsWith('/api/v1/') && cleanPath.startsWith('api/v1/')) {
+      cleanPath = cleanPath.substring('api/v1/'.length);
+    } else if (base.endsWith('/api/') && cleanPath.startsWith('api/')) {
+      cleanPath = cleanPath.substring('api/'.length);
+    }
+
     final urlStr = '$base$cleanPath';
 
     final uri = Uri.parse(urlStr);

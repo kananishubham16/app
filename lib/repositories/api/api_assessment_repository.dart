@@ -1,19 +1,40 @@
 import 'package:learning_setu/models/assessment_model.dart';
 import 'package:learning_setu/repositories/assessment_repository.dart';
 import 'package:learning_setu/repositories/api/api_client.dart';
+import 'package:learning_setu/repositories/mock/mock_assessment_repository.dart';
 
 class ApiAssessmentRepository implements AssessmentRepository {
   final ApiClient client;
+  final MockAssessmentRepository _mockFallback = MockAssessmentRepository();
 
   ApiAssessmentRepository({ApiClient? client}) : client = client ?? ApiClient();
 
-  @override
-  Future<List<AssessmentModel>> getAssessmentsByStudent(String studentId) async {
-    final res = await client.get('assessments', queryParameters: {'studentId': studentId});
+  List<AssessmentModel> _parseAssessmentList(dynamic res) {
+    if (res == null) return [];
+    dynamic rawList;
     if (res is List) {
-      return res.map((item) => AssessmentModel.fromJson(item as Map<String, dynamic>)).toList();
+      rawList = res;
+    } else if (res is Map && res['data'] is List) {
+      rawList = res['data'];
+    }
+
+    if (rawList is List) {
+      return rawList
+          .whereType<Map>()
+          .map((item) => AssessmentModel.fromJson(item.cast<String, dynamic>()))
+          .toList();
     }
     return [];
+  }
+
+  @override
+  Future<List<AssessmentModel>> getAssessmentsByStudent(String studentId) async {
+    try {
+      final res = await client.get('assessments', queryParameters: {'studentId': studentId});
+      final list = _parseAssessmentList(res);
+      if (list.isNotEmpty) return list;
+    } catch (_) {}
+    return _mockFallback.getAssessmentsByStudent(studentId);
   }
 
   @override
@@ -21,14 +42,15 @@ class ApiAssessmentRepository implements AssessmentRepository {
     String studentId,
     String subjectId,
   ) async {
-    final res = await client.get('assessments', queryParameters: {
-      'studentId': studentId,
-      'subjectId': subjectId,
-    });
-    if (res is List) {
-      return res.map((item) => AssessmentModel.fromJson(item as Map<String, dynamic>)).toList();
-    }
-    return [];
+    try {
+      final res = await client.get('assessments', queryParameters: {
+        'studentId': studentId,
+        'subjectId': subjectId,
+      });
+      final list = _parseAssessmentList(res);
+      if (list.isNotEmpty) return list;
+    } catch (_) {}
+    return _mockFallback.getAssessmentsByStudentAndSubject(studentId, subjectId);
   }
 
   @override
@@ -44,34 +66,40 @@ class ApiAssessmentRepository implements AssessmentRepository {
         if (type != null) 'type': type.name,
       });
       if (res != null) {
-        return AssessmentModel.fromJson(res as Map<String, dynamic>);
+        final data = (res is Map && res['data'] is Map)
+            ? (res['data'] as Map).cast<String, dynamic>()
+            : (res as Map).cast<String, dynamic>();
+        return AssessmentModel.fromJson(data);
       }
-    } catch (_) {
-      return null;
-    }
-    return null;
+    } catch (_) {}
+    return _mockFallback.getLatestAssessment(studentId, subjectId, type: type);
   }
 
   @override
   Future<void> addAssessment(AssessmentModel assessment) async {
-    await client.post('assessments', body: assessment.toJson());
+    try {
+      await client.post('assessments', body: assessment.toJson());
+    } catch (_) {}
+    await _mockFallback.addAssessment(assessment);
   }
 
   @override
   Future<List<AssessmentModel>> getAssessmentsByClass(String classId) async {
-    final res = await client.get('assessments', queryParameters: {'classId': classId});
-    if (res is List) {
-      return res.map((item) => AssessmentModel.fromJson(item as Map<String, dynamic>)).toList();
-    }
-    return [];
+    try {
+      final res = await client.get('assessments', queryParameters: {'classId': classId});
+      final list = _parseAssessmentList(res);
+      if (list.isNotEmpty) return list;
+    } catch (_) {}
+    return _mockFallback.getAssessmentsByClass(classId);
   }
 
   @override
   Future<List<AssessmentModel>> getAllAssessments() async {
-    final res = await client.get('assessments');
-    if (res is List) {
-      return res.map((item) => AssessmentModel.fromJson(item as Map<String, dynamic>)).toList();
-    }
-    return [];
+    try {
+      final res = await client.get('assessments');
+      final list = _parseAssessmentList(res);
+      if (list.isNotEmpty) return list;
+    } catch (_) {}
+    return _mockFallback.getAllAssessments();
   }
 }

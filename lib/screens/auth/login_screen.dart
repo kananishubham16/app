@@ -26,6 +26,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   static const List<Map<String, String>> _teacherProfiles = [
     {
+      'id': 'edutrack_teacher',
+      'name': 'Mrs. Anjali Sharma (EduTrack)',
+      'email': 'teacher@edutrack.edu',
+      'subjects_en': 'All Core Subjects (Class 4)',
+      'subjects_gu': 'તમામ મુખ્ય વિષયો (ધોરણ ૪)',
+    },
+    {
       'id': 'user_teacher',
       'name': 'Anita Sharma',
       'email': 'teacher@demo.com',
@@ -52,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _identifierController.text = _getDefaultDemoEmail(widget.role);
-    _passwordController.text = 'demo1234';
+    _passwordController.text = _getDefaultDemoPassword(widget.role);
   }
 
   @override
@@ -65,13 +72,26 @@ class _LoginScreenState extends State<LoginScreen> {
   String _getDefaultDemoEmail(UserRole role) {
     switch (role) {
       case UserRole.teacher:
-        return 'teacher@demo.com';
+        return 'teacher@edutrack.edu';
       case UserRole.principal:
-        return 'principal@demo.com';
+        return 'principal@edutrack.edu';
       case UserRole.brc:
-        return 'brc@demo.com';
+        return 'brc@edutrack.edu';
       case UserRole.parent:
-        return 'parent@demo.com';
+        return 'parent@edutrack.edu';
+    }
+  }
+
+  String _getDefaultDemoPassword(UserRole role) {
+    switch (role) {
+      case UserRole.teacher:
+        return 'teach123';
+      case UserRole.principal:
+        return 'admin123';
+      case UserRole.brc:
+        return 'brc123';
+      case UserRole.parent:
+        return 'parent123';
     }
   }
 
@@ -209,7 +229,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final identifier = _identifierController.text.trim();
     final password = _passwordController.text;
 
-    final success = await authProvider.login(identifier, password);
+    final success = await authProvider.login(
+      identifier,
+      password,
+      role: widget.role,
+    );
     if (!mounted) return;
 
     if (success) {

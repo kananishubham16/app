@@ -18,15 +18,15 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoggedIn => _currentUser != null;
   String? get error => _error;
 
-  Future<bool> login(String emailOrPhone, String password) async {
+  Future<bool> login(String emailOrPhone, String password, {UserRole? role}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
       // Simulated delay for demo
-      await Future.delayed(const Duration(milliseconds: 500));
-      _currentUser = await _authRepo.login(emailOrPhone, password);
+      await Future.delayed(const Duration(milliseconds: 300));
+      _currentUser = await _authRepo.login(emailOrPhone, password, role: role);
       if (_currentUser == null) {
         _error = 'Invalid credentials. Try using "Try Demo" button.';
         _isLoading = false;

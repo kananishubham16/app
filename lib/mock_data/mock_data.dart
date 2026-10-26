@@ -144,9 +144,59 @@ class MockData {
   ];
 
   // ==========================================
-  // 4. DEMO USERS (One per role + supplementary)
+  // 4. DEMO USERS (One per role + supplementary + EduTrack Real Backend Data)
   // ==========================================
   static final List<UserModel> demoUsers = [
+    // EduTrack Official Backend Users
+    const UserModel(
+      id: 'edutrack_teacher',
+      name: 'Mrs. Anjali Sharma',
+      email: 'teacher@edutrack.edu',
+      phone: '+91 98796 67097',
+      role: UserRole.teacher,
+      schoolId: 'school_1',
+      classIds: ['class_4a_s1', 'Class 4'],
+      subjectIds: ['subject_math', 'subject_eng', 'subject_guj', 'subject_hindi', 'subject_evs'],
+      avatarInitials: 'AS',
+    ),
+    const UserModel(
+      id: 'edutrack_principal',
+      name: 'Dr. Vikram Joshi',
+      email: 'principal@edutrack.edu',
+      phone: '+91 98765 43211',
+      role: UserRole.principal,
+      schoolId: 'school_1',
+      avatarInitials: 'VJ',
+    ),
+    const UserModel(
+      id: 'edutrack_brc',
+      name: 'Shri R.K. Mehta (BRC Coordinator)',
+      email: 'brc@edutrack.edu',
+      phone: '+91 98765 43212',
+      role: UserRole.brc,
+      blockId: 'block_1',
+      avatarInitials: 'RM',
+    ),
+    const UserModel(
+      id: 'edutrack_parent',
+      name: 'Kishorbhai Patel',
+      email: 'parent@edutrack.edu',
+      phone: '+91 90235 11487',
+      role: UserRole.parent,
+      childrenIds: ['ET-2026-401', 'ET-2026-501', 'student_1'],
+      avatarInitials: 'KP',
+    ),
+    const UserModel(
+      id: 'edutrack_admin',
+      name: 'EduTrack System Administrator',
+      email: 'admin@edutrack.edu',
+      phone: '+91 98796 00000',
+      role: UserRole.principal,
+      schoolId: 'school_1',
+      avatarInitials: 'EA',
+    ),
+
+    // Standard Demo Accounts
     const UserModel(
       id: 'user_teacher',
       name: 'Anita Sharma',
@@ -517,7 +567,7 @@ class MockData {
   ];
 
   // ==========================================
-  // 6. STUDENTS DATA (30 students across 3 schools)
+  // 6. STUDENTS DATA (30 students across 3 schools + EduTrack Cohort)
   // ==========================================
   static final List<StudentModel> students = [
     // --- School 1, Class 3-A ---
@@ -920,6 +970,99 @@ class MockData {
       parentId: 'user_parent_p30',
       parentName: 'Dinesh Rawat',
       parentPhone: '+91 98765 13010',
+    ),
+
+    // --- EduTrack Official Cohort ---
+    const StudentModel(
+      id: 'ET-2026-401',
+      name: 'Aarav Patel',
+      studentId: 'ET-2026-401',
+      classId: 'class_4a_s1',
+      className: 'Class 4',
+      section: 'A',
+      schoolId: 'school_1',
+      schoolName: 'GPS Sector 7 Primary School',
+      parentId: 'edutrack_parent',
+      parentName: 'Kishorbhai Patel',
+      parentPhone: '+91 90235 11487',
+    ),
+    const StudentModel(
+      id: 'ET-2026-403',
+      name: 'Pooja Patel',
+      studentId: 'ET-2026-403',
+      classId: 'class_4a_s1',
+      className: 'Class 4',
+      section: 'A',
+      schoolId: 'school_1',
+      schoolName: 'GPS Sector 7 Primary School',
+      parentId: 'edutrack_parent',
+      parentName: 'Kishorbhai Patel',
+      parentPhone: '+91 90235 11487',
+    ),
+    const StudentModel(
+      id: 'ET-2026-404',
+      name: 'Rohan Mehta',
+      studentId: 'ET-2026-404',
+      classId: 'class_4a_s1',
+      className: 'Class 4',
+      section: 'A',
+      schoolId: 'school_1',
+      schoolName: 'GPS Sector 7 Primary School',
+      parentId: 'parent_rohan',
+      parentName: 'Bhavin Mehta',
+      parentPhone: '+91 98250 12345',
+    ),
+    const StudentModel(
+      id: 'ET-2026-405',
+      name: 'Ishita Shah',
+      studentId: 'ET-2026-405',
+      classId: 'class_4a_s1',
+      className: 'Class 4',
+      section: 'A',
+      schoolId: 'school_1',
+      schoolName: 'GPS Sector 7 Primary School',
+      parentId: 'parent_ishita',
+      parentName: 'Mayank Shah',
+      parentPhone: '+91 98251 23456',
+    ),
+    const StudentModel(
+      id: 'ET-2026-406',
+      name: 'Harshil Parmar',
+      studentId: 'ET-2026-406',
+      classId: 'class_4a_s1',
+      className: 'Class 4',
+      section: 'A',
+      schoolId: 'school_1',
+      schoolName: 'GPS Sector 7 Primary School',
+      parentId: 'parent_harshil',
+      parentName: 'Pravin Parmar',
+      parentPhone: '+91 98252 34567',
+    ),
+    const StudentModel(
+      id: 'ET-2026-501',
+      name: 'Ananya Joshi',
+      studentId: 'ET-2026-501',
+      classId: 'class_3a_s2',
+      className: 'Class 5',
+      section: 'A',
+      schoolId: 'school_2',
+      schoolName: 'GPS Sector 21 Primary School',
+      parentId: 'parent_ananya',
+      parentName: 'Sanjay Joshi',
+      parentPhone: '+91 98253 45678',
+    ),
+    const StudentModel(
+      id: 'ET-2026-601',
+      name: 'Devansh Bhatt',
+      studentId: 'ET-2026-601',
+      classId: 'class_4a_s2',
+      className: 'Class 6',
+      section: 'A',
+      schoolId: 'school_2',
+      schoolName: 'GPS Sector 21 Primary School',
+      parentId: 'parent_devansh',
+      parentName: 'Nitin Bhatt',
+      parentPhone: '+91 98254 56789',
     ),
   ];
 

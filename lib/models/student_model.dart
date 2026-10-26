@@ -39,17 +39,23 @@ class StudentModel {
     'parentPhone': parentPhone,
   };
 
-  factory StudentModel.fromJson(Map<String, dynamic> json) => StudentModel(
-    id: json['id'] as String,
-    name: json['name'] as String,
-    studentId: json['studentId'] as String,
-    classId: json['classId'] as String,
-    className: json['className'] as String,
-    section: json['section'] as String,
-    schoolId: json['schoolId'] as String,
-    schoolName: json['schoolName'] as String,
-    parentId: json['parentId'] as String?,
-    parentName: json['parentName'] as String?,
-    parentPhone: json['parentPhone'] as String?,
-  );
+  factory StudentModel.fromJson(Map<String, dynamic> json) {
+    final rawId = (json['id'] ?? json['_id'] ?? json['studentId'] ?? '').toString();
+    final sId = (json['studentId'] ?? json['id'] ?? json['_id'] ?? '').toString();
+    final rawClass = (json['class'] ?? json['className'] ?? json['classId'] ?? 'Class 4').toString();
+
+    return StudentModel(
+      id: rawId,
+      name: (json['name'] ?? '').toString(),
+      studentId: sId,
+      classId: (json['classId'] ?? rawClass).toString(),
+      className: (json['className'] ?? rawClass).toString(),
+      section: (json['section'] ?? 'A').toString(),
+      schoolId: (json['schoolId'] ?? 'school_1').toString(),
+      schoolName: (json['schoolName'] ?? 'GPS Primary School').toString(),
+      parentId: json['parentId']?.toString(),
+      parentName: (json['parentName'] ?? json['parent_name'])?.toString(),
+      parentPhone: (json['parentPhone'] ?? json['parentEmail'] ?? json['parent_phone'])?.toString(),
+    );
+  }
 }

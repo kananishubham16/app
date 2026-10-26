@@ -72,17 +72,56 @@ class UserModel {
     'avatarInitials': avatarInitials,
   };
 
-  factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-    id: json['id'] as String,
-    name: json['name'] as String,
-    email: json['email'] as String,
-    phone: json['phone'] as String,
-    role: UserRole.values.byName(json['role'] as String),
-    schoolId: json['schoolId'] as String?,
-    blockId: json['blockId'] as String?,
-    classIds: (json['classIds'] as List?)?.cast<String>(),
-    childrenIds: (json['childrenIds'] as List?)?.cast<String>(),
-    subjectIds: (json['subjectIds'] as List?)?.cast<String>(),
-    avatarInitials: json['avatarInitials'] as String?,
-  );
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    final rawRole = (json['role'] as String?)?.toLowerCase() ?? 'teacher';
+    UserRole parsedRole;
+    if (rawRole == 'coordinator' || rawRole == 'brc') {
+      parsedRole = UserRole.brc;
+    } else if (rawRole == 'principal' || rawRole == 'admin') {
+      parsedRole = UserRole.principal;
+    } else if (rawRole == 'parent') {
+      parsedRole = UserRole.parent;
+    } else {
+      parsedRole = UserRole.teacher;
+    }
+
+    final rawName = (json['name'] ?? '').toString();
+    String initials = '';
+    if (rawName.isNotEmpty) {
+      final parts = rawName.trim().split(RegExp(r'\s+'));
+      if (parts.length >= 2) {
+        initials = '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+      } else if (parts.isNotEmpty && parts[0].isNotEmpty) {
+        initials = parts[0][0].toUpperCase();
+      }
+    }
+
+    List<String>? parsedClassIds;
+    if (json['classIds'] is List) {
+      parsedClassIds = (json['classIds'] as List).map((e) => e.toString()).toList();
+    } else if (json['assignedClass'] != null) {
+      parsedClassIds = json['assignedClass'].toString().split(',').map((c) => c.trim()).toList();
+    }
+
+    List<String>? parsedChildrenIds;
+    if (json['childrenIds'] is List) {
+      parsedChildrenIds = (json['childrenIds'] as List).map((e) => e.toString()).toList();
+    } else if (json['linkedStudentIds'] is List) {
+      parsedChildrenIds = (json['linkedStudentIds'] as List).map((e) => e.toString()).toList();
+    }
+
+    return UserModel(
+      id: (json['id'] ?? json['_id'] ?? json['email'] ?? '').toString(),
+      name: rawName,
+      email: (json['email'] ?? '').toString(),
+      phone: (json['phone'] ?? '+91 98796 67097').toString(),
+      role: parsedRole,
+      schoolId: json['schoolId']?.toString(),
+      blockId: json['blockId']?.toString(),
+      classIds: parsedClassIds,
+      childrenIds: parsedChildrenIds,
+      subjectIds: (json['subjectIds'] as List?)?.map((e) => e.toString()).toList(),
+      avatarInitials: json['avatarInitials']?.toString() ?? initials,
+    );
+  }
 }
