@@ -215,8 +215,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final result = await textBee.sendSms(
       phone: targetPhone,
       message: isGu
-          ? 'લર્નિંગ સેતુ: TextBee ગેટવે ટેસ્ટ સફળ! વિદ્યાર્થી પ્રગતિ સૂચનાઓ સક્રિય છે.'
-          : 'Learning Setu: TextBee gateway test successful! Automated parent alerts active.',
+          ? 'EduTrack: TextBee ગેટવે ટેસ્ટ સફળ! વિદ્યાર્થી પ્રગતિ સૂચનાઓ સક્રિય છે.'
+          : 'EduTrack: TextBee gateway test successful! Automated parent alerts active.',
     );
 
     if (!mounted) return;
@@ -265,7 +265,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     setState(() => _isTestingDeepl = true);
     final deepl = DeeplTranslationService(apiKey: key);
-    const sampleText = 'Welcome to Learning Setu! Student progress is our priority.';
+    const sampleText = 'Welcome to EduTrack! Student progress is our priority.';
     final result = await deepl.translateToGujarati(sampleText);
 
     if (!mounted) return;
@@ -471,7 +471,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           // About Section
           Text(
-            'About Learning Setu',
+            'About EduTrack',
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -510,7 +510,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Learning Setu (લર્નિંગ સેતુ)',
+                              'EduTrack (એજ્યુટ્રેક)',
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),

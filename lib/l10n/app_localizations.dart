@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Learning Setu'**
+  /// **'EduTrack'**
   String get appTitle;
 
   /// No description provided for @home.
@@ -209,7 +209,7 @@ abstract class AppLocalizations {
   /// No description provided for @welcome.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Learning Setu'**
+  /// **'Welcome to EduTrack'**
   String get welcome;
 
   /// No description provided for @selectRole.

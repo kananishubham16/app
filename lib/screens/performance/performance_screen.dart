@@ -2879,7 +2879,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
     if (notes != null && notes.isNotEmpty) {
       detailsBuffer.writeln('Agenda / Notes: $notes');
     }
-    detailsBuffer.writeln('\nOrganized via Learning Setu BRC Management System');
+    detailsBuffer.writeln('\nOrganized via EduTrack BRC Management System');
 
     final uri =
         Uri.parse('https://calendar.google.com/calendar/render').replace(

@@ -1,6 +1,6 @@
 {
-    "name": "learning_setu",
-    "short_name": "learning_setu",
+    "name": "EduTrack",
+    "short_name": "EduTrack",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

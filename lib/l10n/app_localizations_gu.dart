@@ -10,7 +10,7 @@ class AppLocalizationsGu extends AppLocalizations {
   AppLocalizationsGu([String locale = 'gu']) : super(locale);
 
   @override
-  String get appTitle => 'લર્નિંગ સેતુ';
+  String get appTitle => 'EduTrack (એજ્યુટ્રેક)';
 
   @override
   String get home => 'હોમ';
@@ -64,7 +64,7 @@ class AppLocalizationsGu extends AppLocalizations {
   String get parent => 'વાલી';
 
   @override
-  String get welcome => 'લર્નિંગ સેતુમાં આપનું સ્વાગત છે';
+  String get welcome => 'EduTrack માં આપનું સ્વાગત છે';
 
   @override
   String get selectRole => 'ચાલુ રાખવા માટે તમારી ભૂમિકા પસંદ કરો';

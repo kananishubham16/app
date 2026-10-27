@@ -1,6 +1,6 @@
 {
   "@@locale": "gu",
-  "appTitle": "લર્નિંગ સેતુ",
+  "appTitle": "EduTrack (એજ્યુટ્રેક)",
   "home": "હોમ",
   "subjects": "વિષયો",
   "performance": "પ્રદર્શન",
@@ -18,7 +18,7 @@
   "principal": "શાળાના આચાર્ય",
   "brc": "બ્લોક રિસોર્સ કોઓર્ડિનેટર",
   "parent": "વાલી",
-  "welcome": "લર્નિંગ સેતુમાં આપનું સ્વાગત છે",
+  "welcome": "EduTrack માં આપનું સ્વાગત છે",
   "selectRole": "ચાલુ રાખવા માટે તમારી ભૂમિકા પસંદ કરો",
   "mathematics": "ગણિત",
   "gujarati": "ગુજરાતી",

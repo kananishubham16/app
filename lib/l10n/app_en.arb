@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "Learning Setu",
+  "appTitle": "EduTrack",
   "home": "Home",
   "subjects": "Subjects",
   "performance": "Performance",
@@ -18,7 +18,7 @@
   "principal": "School Principal",
   "brc": "Block Resource Coordinator",
   "parent": "Parent",
-  "welcome": "Welcome to Learning Setu",
+  "welcome": "Welcome to EduTrack",
   "selectRole": "Select your role to continue",
   "mathematics": "Mathematics",
   "gujarati": "Gujarati",

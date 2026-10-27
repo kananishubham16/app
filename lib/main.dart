@@ -149,7 +149,7 @@ class LearningSetu extends StatelessWidget {
       child: Consumer<LocaleProvider>(
         builder: (context, localeProvider, _) {
           return MaterialApp(
-            title: 'Learning Setu',
+            title: 'EduTrack',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             locale: localeProvider.locale,

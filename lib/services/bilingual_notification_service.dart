@@ -77,7 +77,7 @@ class BilingualNotificationService {
         ? '\nશિક્ષકની નોંધ: $teacherNotes'
         : '';
 
-    return '''Learning Setu Exam Result / પરીક્ષા પરિણામ 📋
+    return '''EduTrack Exam Result / પરીક્ષા પરિણામ 📋
 
 Dear Parent, assessment result declared for $studentName (Class $className):
 Subject: $subjectName
@@ -127,7 +127,7 @@ View Full Report: https://learningsetu.gujarat.gov.in/r/${studentName.replaceAll
         ? '\nશિક્ષકની નોંધ: $teacherNote'
         : '';
 
-    return '''Learning Setu Remedial Alert / ઉપચારાત્મક શિક્ષણ સૂચના 🎯
+    return '''EduTrack Remedial Alert / ઉપચારાત્મક શિક્ષણ સૂચના 🎯
 
 Dear Parent, a targeted remedial practice task has been assigned for $studentName (Class $className):
 Subject: $subjectName
@@ -172,7 +172,7 @@ Please guide your child to practice this topic at home.
         ? 'ખૂબ સરસ પ્રદર્શન! પુનઃમૂલ્યાંકન માટે તૈયાર.'
         : 'વધુ અભ્યાસની જરૂર છે. ઉપચારાત્મક કાર્ય ભલામણ.';
 
-    return '''Learning Setu Quiz Alert / ક્વિઝ સૂચના 📚
+    return '''EduTrack Quiz Alert / ક્વિઝ સૂચના 📚
 
 Dear Parent, your child $studentName (Class $className) completed a quiz in $subjectName.
 Score: $score/$totalQuestions ($percent%)

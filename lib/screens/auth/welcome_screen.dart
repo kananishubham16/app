@@ -271,7 +271,7 @@ class WelcomeScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                isGu ? 'લર્નિંગ ' : 'Learning ',
+                isGu ? 'એજ્યુ' : 'Edu',
                 style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
@@ -286,7 +286,7 @@ class WelcomeScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  isGu ? 'સેતુ' : 'Setu',
+                  isGu ? 'ટ્રેક' : 'Track',
                   style: const TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w900,

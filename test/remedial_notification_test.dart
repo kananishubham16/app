@@ -17,7 +17,7 @@ void main() {
       );
 
       // Verify English section contents
-      expect(msg.contains('Learning Setu Remedial Alert / ઉપચારાત્મક શિક્ષણ સૂચના 🎯'), isTrue);
+      expect(msg.contains('EduTrack Remedial Alert / ઉપચારાત્મક શિક્ષણ સૂચના 🎯'), isTrue);
       expect(msg.contains('Dear Parent, a targeted remedial practice task has been assigned for Aarav Kumar (Class 3-A):'), isTrue);
       expect(msg.contains('Subject: Mathematics'), isTrue);
       expect(msg.contains('Topic: Subtraction'), isTrue);

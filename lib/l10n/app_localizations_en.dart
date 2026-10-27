@@ -10,7 +10,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Learning Setu';
+  String get appTitle => 'EduTrack';
 
   @override
   String get home => 'Home';
@@ -64,7 +64,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parent => 'Parent';
 
   @override
-  String get welcome => 'Welcome to Learning Setu';
+  String get welcome => 'Welcome to EduTrack';
 
   @override
   String get selectRole => 'Select your role to continue';
