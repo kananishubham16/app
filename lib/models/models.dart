@@ -7,3 +7,4 @@ export 'student_model.dart';
 export 'subject_model.dart';
 export 'user_model.dart';
 export 'parent_review_model.dart';
+export 'holistic_evaluation_model.dart';

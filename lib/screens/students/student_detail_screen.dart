@@ -21,6 +21,7 @@ import 'package:learning_setu/widgets/loading_widget.dart';
 import 'package:learning_setu/widgets/percentage_bar.dart';
 import 'package:learning_setu/widgets/performance_indicator.dart';
 import 'package:learning_setu/widgets/parent_review_box.dart';
+import 'package:learning_setu/widgets/holistic_growth_card.dart';
 import 'package:learning_setu/mock_data/mock_data.dart';
 import 'package:learning_setu/widgets/assigned_teacher_badge.dart';
 
@@ -160,6 +161,12 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                       context,
                       student,
                       perfProv.summary,
+                    ),
+                    const SizedBox(height: 20),
+                    HolisticGrowthCard(
+                      studentId: student.id,
+                      isTeacher: context.watch<AuthProvider>().currentUser?.role == UserRole.teacher,
+                      teacherName: context.watch<AuthProvider>().currentUser?.name,
                     ),
                     const SizedBox(height: 20),
                     _buildTopicGroups(perfProv.summary),

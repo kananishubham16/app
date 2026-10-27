@@ -15,6 +15,7 @@ import 'package:learning_setu/providers/performance_provider.dart';
 import 'package:learning_setu/providers/school_provider.dart';
 import 'package:learning_setu/providers/locale_provider.dart';
 import 'package:learning_setu/providers/parent_review_provider.dart';
+import 'package:learning_setu/providers/holistic_provider.dart';
 
 import 'package:learning_setu/repositories/repositories.dart';
 
@@ -140,6 +141,9 @@ class LearningSetu extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SchoolProvider(effectiveSchoolRepo)),
         ChangeNotifierProvider(
           create: (_) => ParentReviewProvider(storageService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => HolisticProvider(storageService),
         ),
       ],
       child: Consumer<LocaleProvider>(

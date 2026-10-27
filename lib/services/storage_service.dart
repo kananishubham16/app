@@ -5,12 +5,14 @@ import 'package:learning_setu/models/assessment_model.dart';
 import 'package:learning_setu/models/quiz_model.dart';
 import 'package:learning_setu/models/remedial_model.dart';
 import 'package:learning_setu/models/parent_review_model.dart';
+import 'package:learning_setu/models/holistic_evaluation_model.dart';
 
 class StorageService {
   static const String _assessmentsKey = 'local_assessments';
   static const String _quizAttemptsKey = 'local_quiz_attempts';
   static const String _remedialsKey = 'local_remedials';
   static const String _parentReviewsKey = 'local_parent_reviews';
+  static const String _holisticKey = 'local_holistic_evaluations';
   static const String _currentUserKey = 'current_user';
 
   // Save assessments
@@ -81,6 +83,23 @@ class StorageService {
         .toList();
   }
 
+  // Save holistic evaluations
+  Future<void> saveHolisticEvaluations(List<HolisticEvaluationModel> list) async {
+    final prefs = await SharedPreferences.getInstance();
+    final json = list.map((h) => h.toJson()).toList();
+    await prefs.setString(_holisticKey, jsonEncode(json));
+  }
+
+  Future<List<HolisticEvaluationModel>> loadHolisticEvaluations() async {
+    final prefs = await SharedPreferences.getInstance();
+    final str = prefs.getString(_holisticKey);
+    if (str == null) return [];
+    final list = jsonDecode(str) as List;
+    return list
+        .map((j) => HolisticEvaluationModel.fromJson(j as Map<String, dynamic>))
+        .toList();
+  }
+
   // Save current user ID
   Future<void> saveCurrentUser(String? userId) async {
     final prefs = await SharedPreferences.getInstance();
@@ -103,6 +122,7 @@ class StorageService {
     await prefs.remove(_quizAttemptsKey);
     await prefs.remove(_remedialsKey);
     await prefs.remove(_parentReviewsKey);
+    await prefs.remove(_holisticKey);
     await prefs.remove(_currentUserKey);
   }
 }

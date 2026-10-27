@@ -1,3 +1,4 @@
+import 'package:learning_setu/providers/holistic_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:learning_setu/models/models.dart';
@@ -644,6 +645,7 @@ void main() {
             ChangeNotifierProvider(create: (_) => RemedialProvider(mockRemedialRepo, storage)),
             ChangeNotifierProvider(create: (_) => PerformanceProvider(perfService)),
             ChangeNotifierProvider(create: (_) => ParentReviewProvider(storage)),
+            ChangeNotifierProvider(create: (_) => HolisticProvider(storage)),
           ],
           child: MaterialApp(
             locale: const Locale('gu'),
@@ -732,6 +734,7 @@ void main() {
               return prov;
             }),
             ChangeNotifierProvider(create: (_) => ParentReviewProvider(storage)),
+            ChangeNotifierProvider(create: (_) => HolisticProvider(storage)),
           ],
           child: MaterialApp(
             locale: const Locale('gu'),

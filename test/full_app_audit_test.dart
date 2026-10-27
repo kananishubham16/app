@@ -1,3 +1,4 @@
+import 'package:learning_setu/providers/holistic_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -88,6 +89,7 @@ void main() {
           return prov;
         }),
         ChangeNotifierProvider(create: (_) => ParentReviewProvider(storage)),
+        ChangeNotifierProvider(create: (_) => HolisticProvider(storage)),
         ChangeNotifierProvider(create: (_) => PerformanceProvider(perfService)),
         ChangeNotifierProvider(create: (_) => QuizProvider(mockQuizRepo, storage)),
       ],
