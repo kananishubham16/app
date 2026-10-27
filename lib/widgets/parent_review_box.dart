@@ -32,18 +32,23 @@ class ParentReviewBox extends StatefulWidget {
 
 class _ParentReviewBoxState extends State<ParentReviewBox> {
   bool _isEditing = false;
+  bool _isAnswering = false;
   late final TextEditingController _textController;
+  late final TextEditingController _responseController;
   final _formKey = GlobalKey<FormState>();
+  final _responseFormKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
     _textController = TextEditingController();
+    _responseController = TextEditingController();
   }
 
   @override
   void dispose() {
     _textController.dispose();
+    _responseController.dispose();
     super.dispose();
   }
 
@@ -176,6 +181,66 @@ class _ParentReviewBoxState extends State<ParentReviewBox> {
                   ),
                 ),
               ),
+              // Verified Teacher Response Card
+              if (review.teacherResponse != null && review.teacherResponse!.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50.withOpacity(0.85),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Colors.green.shade300,
+                      width: 1.2,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.verified_rounded,
+                            size: 16,
+                            color: Colors.green.shade700,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              isGu
+                                  ? '${widget.subjectName} શિક્ષકનો ઉત્તર (${review.respondedBy ?? "શિક્ષક"})'
+                                  : 'Teacher Response (${review.respondedBy ?? "${widget.subjectName} Teacher"})',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green.shade900,
+                              ),
+                            ),
+                          ),
+                          if (review.respondedAt != null)
+                            Text(
+                              DateFormat('dd MMM').format(review.respondedAt!),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.green.shade800,
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        review.teacherResponse!,
+                        style: TextStyle(
+                          fontSize: 13,
+                          height: 1.4,
+                          color: Colors.green.shade900,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 10),
               // Footer: Date and Acknowledgement status
               LayoutBuilder(
@@ -244,6 +309,40 @@ class _ParentReviewBoxState extends State<ParentReviewBox> {
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.green.shade800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        // Answered tag
+                        if (review.teacherResponse != null && review.teacherResponse!.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.teal.shade50,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.teal.shade200),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.mark_chat_read_rounded,
+                                  size: 13,
+                                  color: Colors.teal.shade700,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  isGu
+                                      ? 'ઉત્તર મળેલ છે'
+                                      : 'Response Received',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.teal.shade800,
                                   ),
                                 ),
                               ],
@@ -595,8 +694,238 @@ class _ParentReviewBoxState extends State<ParentReviewBox> {
                 ),
               ),
             ),
+            // Existing Teacher Response (if any and not editing)
+            if (review.teacherResponse != null && review.teacherResponse!.isNotEmpty && !_isAnswering) ...[
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50.withOpacity(0.85),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.green.shade300, width: 1.2),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle_rounded,
+                          size: 16,
+                          color: Colors.green.shade700,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            isGu
+                                ? 'તમારો ઉત્તર (વાલીને દૃશ્યમાન):'
+                                : 'Your Response (Visible to Parent):',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green.shade900,
+                            ),
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              _isAnswering = true;
+                              _responseController.text = review.teacherResponse ?? '';
+                            });
+                          },
+                          icon: const Icon(Icons.edit_outlined, size: 14),
+                          label: Text(
+                            isGu ? 'સુધારો' : 'Edit',
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                          style: TextButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      review.teacherResponse!,
+                      style: TextStyle(
+                        fontSize: 13,
+                        height: 1.4,
+                        color: Colors.green.shade900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            // Interactive Answer Form (when teacher clicks Answer / Edit)
+            if (_isAnswering) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.purple.shade300, width: 1.5),
+                ),
+                child: Form(
+                  key: _responseFormKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.reply_rounded, size: 16, color: Colors.purple.shade800),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              isGu ? 'વાલીને ઉત્તર / માર્ગદર્શન આપો:' : 'Answer / Guide the Parent:',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.purple.shade900,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      // Quick reply chips
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          ActionChip(
+                            visualDensity: VisualDensity.compact,
+                            avatar: const Icon(Icons.flash_on, size: 13, color: Colors.orange),
+                            label: Text(
+                              isGu ? 'રોજ 10 મિનિટ મહાવરો' : '10 min daily practice',
+                              style: const TextStyle(fontSize: 11),
+                            ),
+                            onPressed: () {
+                              _responseController.text = isGu
+                                  ? 'વાલીશ્રી, ઘરમાં રોજ 10-15 મિનિટ નિયમિત પુનરાવર્તન કરાવો. વર્ગખંડમાં અમે ખાસ ધ્યાન રાખીશું.'
+                                  : 'Dear Parent, practicing for 10-15 minutes at home daily will help reinforce this. We will give extra attention in class.';
+                            },
+                          ),
+                          ActionChip(
+                            visualDensity: VisualDensity.compact,
+                            avatar: const Icon(Icons.thumb_up_alt_outlined, size: 13, color: Colors.green),
+                            label: Text(
+                              isGu ? 'વર્ગમાં સારી પ્રગતિ' : 'Good class progress',
+                              style: const TextStyle(fontSize: 11),
+                            ),
+                            onPressed: () {
+                              _responseController.text = isGu
+                                  ? 'વિદ્યાર્થી વર્ગખંડમાં સારો રસ દાખવી રહ્યો છે અને પ્રગતિ ઉત્સાહજનક છે.'
+                                  : 'The student is showing great enthusiasm and steady progress during classroom activities.';
+                            },
+                          ),
+                          ActionChip(
+                            visualDensity: VisualDensity.compact,
+                            avatar: const Icon(Icons.auto_stories, size: 13, color: Colors.blue),
+                            label: Text(
+                              isGu ? 'ઉપચારાત્મક સત્ર' : 'Remedial session',
+                              style: const TextStyle(fontSize: 11),
+                            ),
+                            onPressed: () {
+                              _responseController.text = isGu
+                                  ? 'આ વિષયના મુશ્કેલ મુદ્દાઓ માટે અમે ઉપચારાત્મક (Remedial) વર્ગમાં ખાસ માર્ગદર્શન આપી રહ્યા છીએ.'
+                                  : 'We have enrolled the student in focused remedial learning sessions to strengthen basic fundamentals.';
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _responseController,
+                        maxLines: 3,
+                        minLines: 2,
+                        decoration: InputDecoration(
+                          hintText: isGu
+                              ? 'વાલીના પ્રશ્ન અથવા સમીક્ષાનો ઉત્તર લખો...'
+                              : 'Write your verified guidance or response to the parent...',
+                          hintStyle: TextStyle(
+                            fontSize: 12.5,
+                            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                          ),
+                          filled: true,
+                          fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.2),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.purple.shade200),
+                          ),
+                          contentPadding: const EdgeInsets.all(10),
+                        ),
+                        validator: (val) {
+                          if (val == null || val.trim().isEmpty) {
+                            return isGu ? 'કૃપા કરીને ઉત્તર લખો' : 'Please write your response';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _isAnswering = false;
+                              });
+                            },
+                            child: Text(isGu ? 'રદ કરો' : 'Cancel'),
+                          ),
+                          const SizedBox(width: 8),
+                          FilledButton.icon(
+                            icon: const Icon(Icons.send_rounded, size: 14),
+                            label: Text(isGu ? 'ઉત્તર મોકલો' : 'Submit Answer'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Colors.purple.shade700,
+                              visualDensity: VisualDensity.compact,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onPressed: () async {
+                              if (_responseFormKey.currentState?.validate() ?? false) {
+                                final text = _responseController.text.trim();
+                                final teacherName = user?.name ?? 'Subject Teacher';
+                                await reviewProv.submitTeacherResponse(
+                                  reviewId: review.id,
+                                  responseText: text,
+                                  teacherName: teacherName,
+                                );
+                                if (context.mounted) {
+                                  setState(() {
+                                    _isAnswering = false;
+                                  });
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        isGu
+                                            ? 'વાલીને ઉત્તર સફળતાપૂર્વક મોકલાયો!'
+                                            : 'Response successfully sent to parent!',
+                                      ),
+                                      backgroundColor: Colors.green.shade800,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 10),
-            // Footer: Teacher Acknowledge Button
+            // Footer: Teacher Acknowledge Button & Answer Button
             LayoutBuilder(
               builder: (context, constraints) {
                 return SizedBox(
@@ -619,46 +948,82 @@ class _ParentReviewBoxState extends State<ParentReviewBox> {
                           ),
                         ),
                       ),
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          final teacherName = user?.name ?? 'Teacher';
-                          reviewProv.toggleAcknowledge(review.id, teacherName);
-                        },
-                        icon: Icon(
-                          review.isAcknowledged
-                              ? Icons.check_circle_rounded
-                              : Icons.check_circle_outline_rounded,
-                          size: 15,
-                          color: review.isAcknowledged
-                              ? Colors.green.shade700
-                              : theme.colorScheme.primary,
-                        ),
-                        label: Text(
-                          review.isAcknowledged
-                              ? (isGu ? 'સ્વીકારેલ છે' : 'Acknowledged')
-                              : (isGu ? 'વાંચ્યું / સ્વીકારો' : 'Acknowledge'),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: review.isAcknowledged
-                                ? Colors.green.shade800
-                                : theme.colorScheme.primary,
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+                        children: [
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              final teacherName = user?.name ?? 'Teacher';
+                              reviewProv.toggleAcknowledge(review.id, teacherName);
+                            },
+                            icon: Icon(
+                              review.isAcknowledged
+                                  ? Icons.check_circle_rounded
+                                  : Icons.check_circle_outline_rounded,
+                              size: 15,
+                              color: review.isAcknowledged
+                                  ? Colors.green.shade700
+                                  : theme.colorScheme.primary,
+                            ),
+                            label: Text(
+                              review.isAcknowledged
+                                  ? (isGu ? 'સ્વીકારેલ છે' : 'Acknowledged')
+                                  : (isGu ? 'વાંચ્યું / સ્વીકારો' : 'Acknowledge'),
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: review.isAcknowledged
+                                    ? Colors.green.shade800
+                                    : theme.colorScheme.primary,
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                              backgroundColor: review.isAcknowledged
+                                  ? Colors.green.shade50
+                                  : Colors.transparent,
+                              side: BorderSide(
+                                color: review.isAcknowledged
+                                    ? Colors.green.shade300
+                                    : theme.colorScheme.primary.withOpacity(0.5),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
                           ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          backgroundColor: review.isAcknowledged
-                              ? Colors.green.shade50
-                              : Colors.transparent,
-                          side: BorderSide(
-                            color: review.isAcknowledged
-                                ? Colors.green.shade300
-                                : theme.colorScheme.primary.withOpacity(0.5),
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
+                          if (!_isAnswering)
+                            FilledButton.tonalIcon(
+                              onPressed: () {
+                                setState(() {
+                                  _isAnswering = true;
+                                  _responseController.text = review.teacherResponse ?? '';
+                                });
+                              },
+                              icon: Icon(
+                                review.teacherResponse != null && review.teacherResponse!.isNotEmpty
+                                    ? Icons.edit_note_rounded
+                                    : Icons.reply_rounded,
+                                size: 15,
+                              ),
+                              label: Text(
+                                review.teacherResponse != null && review.teacherResponse!.isNotEmpty
+                                    ? (isGu ? 'ઉત્તરમાં સુધારો' : 'Edit Answer')
+                                    : (isGu ? 'વાલીને ઉત્તર આપો' : 'Answer Parent'),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              style: FilledButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ],
                   ),

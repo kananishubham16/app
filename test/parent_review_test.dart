@@ -87,6 +87,7 @@ void main() {
     final storageService = StorageService();
 
     return MultiProvider(
+      key: UniqueKey(),
       providers: [
         ChangeNotifierProvider<AuthProvider>(
           create: (_) {
@@ -185,6 +186,77 @@ void main() {
           findsOneWidget);
       expect(find.text('Teacher Only'), findsOneWidget);
       expect(find.text('Acknowledged'), findsOneWidget);
+    });
+
+    testWidgets(
+        'Assigned subject teacher can answer parent question/review and parent sees verified response',
+        (tester) async {
+      final storage = StorageService();
+      final reviewProv = ParentReviewProvider(storage);
+      await reviewProv.loadReviews();
+
+      // Step 1: Teacher views Diya's Math review (not answered yet)
+      await tester.pumpWidget(
+        buildTestWidget(
+          role: UserRole.teacher,
+          userId: 'user_teacher',
+          studentId: 'student_2',
+          subjectId: 'subject_math',
+          subjectName: 'Mathematics',
+          reviewProv: reviewProv,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Answer Parent'), findsOneWidget);
+
+      // Tap Answer Parent button
+      await tester.tap(find.text('Answer Parent'));
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Answer / Guide the Parent:'), findsOneWidget);
+      expect(find.text('10 min daily practice'), findsOneWidget);
+      expect(find.text('Submit Answer'), findsOneWidget);
+
+      // Enter response text
+      await tester.enterText(
+        find.byType(TextFormField),
+        'Great work! We will introduce 3-digit multiplications next week.',
+      );
+      await tester.tap(find.text('Submit Answer'));
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
+
+      // Teacher view now shows verified response card and Edit Answer button
+      expect(find.textContaining('Your Response (Visible to Parent):'), findsOneWidget);
+      expect(find.text('Great work! We will introduce 3-digit multiplications next week.'), findsOneWidget);
+      expect(find.text('Edit Answer'), findsOneWidget);
+
+      // Provider has recorded the response
+      final updatedReview = reviewProv.getReview('student_2', 'subject_math');
+      expect(updatedReview, isNotNull);
+      expect(updatedReview!.teacherResponse,
+          'Great work! We will introduce 3-digit multiplications next week.');
+      expect(updatedReview.respondedBy, 'Anita Sharma');
+
+      // Step 2: Parent views the review and can now see the teacher's response!
+      await tester.pumpWidget(
+        buildTestWidget(
+          role: UserRole.parent,
+          studentId: 'student_2',
+          subjectId: 'subject_math',
+          subjectName: 'Mathematics',
+          reviewProv: reviewProv,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Teacher Response (Anita Sharma)'), findsOneWidget);
+      expect(find.text('Great work! We will introduce 3-digit multiplications next week.'), findsOneWidget);
+      expect(find.text('Response Received'), findsOneWidget);
     });
 
     testWidgets(

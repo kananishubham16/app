@@ -50,3 +50,4 @@ app.*.map.json
 # Environment variables & API keys
 .env
 .env.*
+*.apk

@@ -26,6 +26,9 @@ class ParentReviewProvider with ChangeNotifier {
       createdAt: DateTime.now().subtract(const Duration(days: 2)),
       isAcknowledged: true,
       acknowledgedBy: 'Anita Sharma',
+      teacherResponse: 'Dear Ramesh Patel, thank you for sharing! We will use abacus beads and base-10 blocks during Tuesday and Thursday remedial sessions to clarify borrowing.',
+      respondedAt: DateTime.now().subtract(const Duration(days: 1)),
+      respondedBy: 'Anita Sharma',
     ),
     ParentReviewModel(
       id: 'review_aarav_guj',
@@ -129,6 +132,27 @@ class ParentReviewProvider with ChangeNotifier {
       _reviews[index] = existing.copyWith(
         isAcknowledged: newAcknowledged,
         acknowledgedBy: newAcknowledged ? teacherName : null,
+      );
+      notifyListeners();
+      await _storageService.saveParentReviews(_reviews);
+    }
+  }
+
+  Future<void> submitTeacherResponse({
+    required String reviewId,
+    required String responseText,
+    required String teacherName,
+  }) async {
+    final index = _reviews.indexWhere((r) => r.id == reviewId);
+    if (index >= 0) {
+      final existing = _reviews[index];
+      final now = DateTime.now();
+      _reviews[index] = existing.copyWith(
+        teacherResponse: responseText.trim(),
+        respondedAt: now,
+        respondedBy: teacherName,
+        isAcknowledged: true,
+        acknowledgedBy: teacherName,
       );
       notifyListeners();
       await _storageService.saveParentReviews(_reviews);

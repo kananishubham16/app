@@ -8,6 +8,9 @@ class ParentReviewModel {
   final DateTime? updatedAt;
   final bool isAcknowledged;
   final String? acknowledgedBy;
+  final String? teacherResponse;
+  final DateTime? respondedAt;
+  final String? respondedBy;
 
   const ParentReviewModel({
     required this.id,
@@ -19,6 +22,9 @@ class ParentReviewModel {
     this.updatedAt,
     this.isAcknowledged = false,
     this.acknowledgedBy,
+    this.teacherResponse,
+    this.respondedAt,
+    this.respondedBy,
   });
 
   ParentReviewModel copyWith({
@@ -31,6 +37,9 @@ class ParentReviewModel {
     DateTime? updatedAt,
     bool? isAcknowledged,
     String? acknowledgedBy,
+    String? teacherResponse,
+    DateTime? respondedAt,
+    String? respondedBy,
   }) {
     return ParentReviewModel(
       id: id ?? this.id,
@@ -42,6 +51,9 @@ class ParentReviewModel {
       updatedAt: updatedAt ?? this.updatedAt,
       isAcknowledged: isAcknowledged ?? this.isAcknowledged,
       acknowledgedBy: acknowledgedBy ?? this.acknowledgedBy,
+      teacherResponse: teacherResponse ?? this.teacherResponse,
+      respondedAt: respondedAt ?? this.respondedAt,
+      respondedBy: respondedBy ?? this.respondedBy,
     );
   }
 
@@ -55,6 +67,9 @@ class ParentReviewModel {
     'updatedAt': updatedAt?.toIso8601String(),
     'isAcknowledged': isAcknowledged,
     'acknowledgedBy': acknowledgedBy,
+    'teacherResponse': teacherResponse,
+    'respondedAt': respondedAt?.toIso8601String(),
+    'respondedBy': respondedBy,
   };
 
   factory ParentReviewModel.fromJson(Map<String, dynamic> json) => ParentReviewModel(
@@ -67,5 +82,8 @@ class ParentReviewModel {
     updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt'] as String) : null,
     isAcknowledged: json['isAcknowledged'] as bool? ?? false,
     acknowledgedBy: json['acknowledgedBy'] as String?,
+    teacherResponse: json['teacherResponse'] as String?,
+    respondedAt: json['respondedAt'] != null ? DateTime.parse(json['respondedAt'] as String) : null,
+    respondedBy: json['respondedBy'] as String?,
   );
 }

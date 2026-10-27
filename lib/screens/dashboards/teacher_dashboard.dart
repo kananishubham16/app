@@ -16,6 +16,7 @@ import 'package:learning_setu/models/school_model.dart';
 import 'package:learning_setu/models/student_model.dart';
 import 'package:learning_setu/models/subject_model.dart';
 import 'package:learning_setu/models/assessment_model.dart';
+import 'package:learning_setu/models/parent_review_model.dart';
 import 'package:learning_setu/widgets/stat_card.dart';
 import 'package:learning_setu/widgets/student_card.dart';
 import 'package:learning_setu/widgets/section_header.dart';
@@ -338,7 +339,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
           const SizedBox(height: 20),
 
           // 3. Quick Actions
-          _buildQuickActions(students),
+          _buildQuickActions(students, subjects, teacherSubjects),
           const SizedBox(height: 20),
 
           // 4. MISTAKE 1 RESOLUTION: Full Subjects View Section on Home Tab
@@ -446,6 +447,10 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
           ),
           const SizedBox(height: 8),
           _buildRecentAssessments(recentAssessments, students),
+          const SizedBox(height: 24),
+
+          // 8. Parent Questions & Inquiries Section (Teacher Answering Desk)
+          _buildParentReviewsSection(context, user, teacherSubjects, subjects, students),
           const SizedBox(height: 24),
         ],
       ),
@@ -847,8 +852,21 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     );
   }
 
-  Widget _buildQuickActions(List<StudentModel> students) {
+  Widget _buildQuickActions(
+    List<StudentModel> students,
+    List<SubjectModel> subjects,
+    List<SubjectModel> teacherSubjects,
+  ) {
     final l10n = AppLocalizations.of(context);
+    final isGu = Localizations.localeOf(context).languageCode == 'gu';
+    final user = context.watch<AuthProvider>().currentUser;
+    final reviewProv = Provider.of<ParentReviewProvider?>(context);
+    final teacherSubjectIds = user?.subjectIds ?? [];
+    final pendingCount = (reviewProv?.reviews ?? [])
+        .where((r) =>
+            (teacherSubjectIds.isEmpty || teacherSubjectIds.contains(r.subjectId)) &&
+            (r.teacherResponse == null || r.teacherResponse!.isEmpty))
+        .length;
 
     return Card(
       elevation: 0,
@@ -976,6 +994,53 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 8),
+                // Dedicated Quick Action to Answer Parent Inquiries
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.tonalIcon(
+                    onPressed: () {
+                      _showParentQuestionsModal(
+                        context: context,
+                        user: user,
+                        teacherSubjects: teacherSubjects,
+                        allSubjects: subjects,
+                        students: students,
+                        isGu: isGu,
+                      );
+                    },
+                    icon: Icon(
+                      Icons.question_answer_rounded,
+                      size: 16,
+                      color: pendingCount > 0 ? Colors.purple.shade800 : Colors.teal.shade800,
+                    ),
+                    label: Text(
+                      isGu
+                          ? 'વાલીઓના પ્રશ્નો અને ઉત્તરો ($pendingCount પેન્ડિંગ)'
+                          : 'Answer Parent Inquiries ($pendingCount Pending)',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                      backgroundColor: pendingCount > 0
+                          ? Colors.purple.shade50
+                          : Colors.teal.shade50,
+                      foregroundColor: pendingCount > 0
+                          ? Colors.purple.shade900
+                          : Colors.teal.shade900,
+                      side: BorderSide(
+                        color: pendingCount > 0
+                            ? Colors.purple.shade300
+                            : Colors.teal.shade300,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -1109,6 +1174,650 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
           );
         },
       ),
+    );
+  }
+
+  /// Parent Reviews & Inquiries Section: Displays reviews/questions submitted by parents
+  /// for the teacher's assigned subjects with dedicated answering & guidance tools.
+  Widget _buildParentReviewsSection(
+    BuildContext context,
+    UserModel? user,
+    List<SubjectModel> teacherSubjects,
+    List<SubjectModel> allSubjects,
+    List<StudentModel> students,
+  ) {
+    final reviewProv = Provider.of<ParentReviewProvider?>(context);
+    final isGu = Localizations.localeOf(context).languageCode == 'gu';
+    final teacherSubjectIds = user?.subjectIds ?? [];
+
+    if (reviewProv == null) {
+      return const SizedBox.shrink();
+    }
+
+    final allReviews = reviewProv.reviews;
+    final relevantReviews = allReviews.where((r) {
+      if (teacherSubjectIds.isNotEmpty) {
+        return teacherSubjectIds.contains(r.subjectId);
+      }
+      return true;
+    }).toList();
+
+    final pendingCount = relevantReviews
+        .where((r) => r.teacherResponse == null || r.teacherResponse!.isEmpty)
+        .length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(
+          title: isGu ? 'વાલીઓના પ્રશ્નો અને પ્રતિભાવો' : 'Parent Reviews & Inquiries',
+          subtitle: isGu
+              ? 'તમારા વિષય સંબંધિત વાલીઓના પ્રશ્નોના ઉત્તર આપો'
+              : 'Answer questions & observations submitted by parents',
+          actionLabel: relevantReviews.isNotEmpty
+              ? '$pendingCount ${isGu ? "પેન્ડિંગ" : "Pending"}'
+              : null,
+        ),
+        const SizedBox(height: 8),
+        if (relevantReviews.isEmpty)
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.mark_chat_read_outlined,
+                    color: Colors.grey.shade600,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      isGu
+                          ? 'તમારા વિષય માટે કોઈ નવા વાલી પ્રશ્નો પેન્ડિંગ નથી.'
+                          : 'No pending parent questions for your assigned subjects.',
+                      style: TextStyle(
+                        color: Colors.grey.shade700,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: relevantReviews.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 10),
+            itemBuilder: (context, index) {
+              final review = relevantReviews[index];
+              StudentModel? student;
+              for (final s in students) {
+                if (s.id == review.studentId) {
+                  student = s;
+                  break;
+                }
+              }
+
+              SubjectModel? subject;
+              for (final sub in allSubjects) {
+                if (sub.id == review.subjectId) {
+                  subject = sub;
+                  break;
+                }
+              }
+
+              final subjectName = subject?.getLocalizedName(context) ??
+                  (review.subjectId == 'subject_math'
+                      ? (isGu ? 'ગણિત' : 'Mathematics')
+                      : (review.subjectId == 'subject_guj'
+                          ? (isGu ? 'ગુજરાતી' : 'Gujarati')
+                          : (review.subjectId == 'subject_eng'
+                              ? (isGu ? 'અંગ્રેજી' : 'English')
+                              : (isGu ? 'પર્યાવરણ' : 'EVS'))));
+
+              final studentName = student?.name ?? 'Student #${review.studentId}';
+              final hasResponse =
+                  review.teacherResponse != null && review.teacherResponse!.isNotEmpty;
+
+              return Card(
+                elevation: 1,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(
+                    color: hasResponse ? Colors.green.shade300 : Colors.amber.shade300,
+                    width: 1.2,
+                  ),
+                ),
+                color: hasResponse
+                    ? Colors.green.shade50.withOpacity(0.3)
+                    : Colors.amber.shade50.withOpacity(0.35),
+                child: Padding(
+                  padding: const EdgeInsets.all(14.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header Row
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            radius: 18,
+                            backgroundColor: (hasResponse ? Colors.green : Colors.amber).shade100,
+                            child: Icon(
+                              Icons.family_restroom_rounded,
+                              size: 18,
+                              color: (hasResponse ? Colors.green : Colors.amber).shade800,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        studentName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: _getSubjectColor(review.subjectId).withOpacity(0.12),
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(
+                                          color: _getSubjectColor(review.subjectId).withOpacity(0.3),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        subjectName,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: _getSubjectColor(review.subjectId),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${review.parentName} • ${DateFormat("dd MMM yyyy").format(review.createdAt)}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      // Parent's Question / Note
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Colors.grey.shade300,
+                          ),
+                        ),
+                        child: Text(
+                          '“${review.reviewText}”',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontStyle: FontStyle.italic,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                      // Verified Teacher Response (if already provided)
+                      if (hasResponse) ...[
+                        const SizedBox(height: 10),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.green.shade300),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.verified_rounded,
+                                    size: 15,
+                                    color: Colors.green.shade700,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      isGu
+                                          ? 'તમારો ઉત્તર (${review.respondedBy ?? "શિક્ષક"}):'
+                                          : 'Your Response (${review.respondedBy ?? "Teacher"}):',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green.shade900,
+                                      ),
+                                    ),
+                                  ),
+                                  if (review.respondedAt != null)
+                                    Text(
+                                      DateFormat('dd MMM').format(review.respondedAt!),
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.green.shade800,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                review.teacherResponse!,
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  height: 1.4,
+                                  color: Colors.green.shade900,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      // Action Buttons
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          return SizedBox(
+                            width: double.infinity,
+                            child: Wrap(
+                              alignment: WrapAlignment.spaceBetween,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                if (student != null)
+                                  TextButton.icon(
+                                    onPressed: () => _navigateToStudent(student!),
+                                    icon: const Icon(Icons.person_search_outlined, size: 14),
+                                    label: Text(
+                                      isGu ? 'વિદ્યાર્થી પ્રોફાઇલ' : 'View Student',
+                                      style: const TextStyle(fontSize: 11),
+                                    ),
+                                    style: TextButton.styleFrom(
+                                      visualDensity: VisualDensity.compact,
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    ),
+                                  )
+                                else
+                                  const SizedBox.shrink(),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    OutlinedButton.icon(
+                                      onPressed: () {
+                                        final teacherName = user?.name ?? 'Teacher';
+                                        reviewProv.toggleAcknowledge(review.id, teacherName);
+                                      },
+                                      icon: Icon(
+                                        review.isAcknowledged
+                                            ? Icons.check_circle_rounded
+                                            : Icons.check_circle_outline_rounded,
+                                        size: 14,
+                                        color: review.isAcknowledged ? Colors.green.shade700 : null,
+                                      ),
+                                      label: Text(
+                                        review.isAcknowledged
+                                            ? (isGu ? 'સ્વીકારેલ' : 'Acknowledged')
+                                            : (isGu ? 'સ્વીકારો' : 'Acknowledge'),
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w600,
+                                          color: review.isAcknowledged ? Colors.green.shade800 : null,
+                                        ),
+                                      ),
+                                      style: OutlinedButton.styleFrom(
+                                        visualDensity: VisualDensity.compact,
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        backgroundColor: review.isAcknowledged ? Colors.green.shade50 : null,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    FilledButton.icon(
+                                      onPressed: () {
+                                        _showAnswerParentDialog(
+                                          context: context,
+                                          review: review,
+                                          studentName: studentName,
+                                          subjectName: subjectName,
+                                          teacherName: user?.name ?? 'Teacher',
+                                          isGu: isGu,
+                                        );
+                                      },
+                                      icon: Icon(
+                                        hasResponse ? Icons.edit_note_rounded : Icons.reply_rounded,
+                                        size: 14,
+                                      ),
+                                      label: Text(
+                                        hasResponse
+                                            ? (isGu ? 'ઉત્તરમાં સુધારો' : 'Edit Answer')
+                                            : (isGu ? 'વાલીને ઉત્તર આપો' : 'Answer Parent'),
+                                        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+                                      ),
+                                      style: FilledButton.styleFrom(
+                                        visualDensity: VisualDensity.compact,
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                        backgroundColor: hasResponse
+                                            ? Theme.of(context).colorScheme.primary
+                                            : Colors.purple.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+      ],
+    );
+  }
+
+  /// Interactive Modal Bottom Sheet for answering parent questions from Quick Actions
+  void _showParentQuestionsModal({
+    required BuildContext context,
+    required UserModel? user,
+    required List<SubjectModel> teacherSubjects,
+    required List<SubjectModel> allSubjects,
+    required List<StudentModel> students,
+    required bool isGu,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (bottomSheetContext) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.8,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return Container(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+              child: ListView(
+                controller: scrollController,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade400,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.purple.shade100,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.forum_rounded, color: Colors.purple.shade800, size: 20),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isGu ? 'વાલીઓના પ્રશ્નો અને ઉત્તરો' : 'Parent Questions & Inquiries',
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              isGu ? 'વાલીઓને સત્તાવાર માર્ગદર્શન અને ઉત્તર આપો' : 'Respond to parent reviews and queries',
+                              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.of(bottomSheetContext).pop(),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 24),
+                  _buildParentReviewsSection(
+                    context,
+                    user,
+                    teacherSubjects,
+                    allSubjects,
+                    students,
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Official Answer Parent Dialog with Quick Suggestions and Verification
+  void _showAnswerParentDialog({
+    required BuildContext context,
+    required ParentReviewModel review,
+    required String studentName,
+    required String subjectName,
+    required String teacherName,
+    required bool isGu,
+  }) {
+    final responseController = TextEditingController(text: review.teacherResponse ?? '');
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(Icons.reply_rounded, color: Colors.purple.shade700),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  isGu ? 'વાલીને ઉત્તર આપો' : 'Answer Parent Inquiry',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$studentName • $subjectName',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  Text(
+                    '${review.parentName} (${DateFormat("dd MMM").format(review.createdAt)})',
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Text(
+                      '“${review.reviewText}”',
+                      style: const TextStyle(fontSize: 12.5, fontStyle: FontStyle.italic),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    isGu ? 'ઝડપી ઉત્તર સૂચનો:' : 'Quick Response Suggestions:',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.purple.shade900,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      ActionChip(
+                        visualDensity: VisualDensity.compact,
+                        avatar: const Icon(Icons.flash_on, size: 12, color: Colors.orange),
+                        label: Text(
+                          isGu ? 'રોજ 10 મિનિટ મહાવરો' : '10 min daily practice',
+                          style: const TextStyle(fontSize: 10.5),
+                        ),
+                        onPressed: () {
+                          responseController.text = isGu
+                              ? 'વાલીશ્રી, ઘરમાં રોજ 10-15 મિનિટ નિયમિત પુનરાવર્તન કરાવો. વર્ગખંડમાં અમે ખાસ ધ્યાન રાખીશું.'
+                              : 'Dear Parent, practicing for 10-15 minutes at home daily will help reinforce this. We will give extra attention in class.';
+                        },
+                      ),
+                      ActionChip(
+                        visualDensity: VisualDensity.compact,
+                        avatar: const Icon(Icons.thumb_up_alt_outlined, size: 12, color: Colors.green),
+                        label: Text(
+                          isGu ? 'વર્ગમાં સારી પ્રગતિ' : 'Good class progress',
+                          style: const TextStyle(fontSize: 10.5),
+                        ),
+                        onPressed: () {
+                          responseController.text = isGu
+                              ? 'વિદ્યાર્થી વર્ગખંડમાં સારો રસ દાખવી રહ્યો છે અને પ્રગતિ ઉત્સાહજનક છે.'
+                              : 'The student is showing great enthusiasm and steady progress during classroom activities.';
+                        },
+                      ),
+                      ActionChip(
+                        visualDensity: VisualDensity.compact,
+                        avatar: const Icon(Icons.auto_stories, size: 12, color: Colors.blue),
+                        label: Text(
+                          isGu ? 'ઉપચારાત્મક સત્ર' : 'Remedial session',
+                          style: const TextStyle(fontSize: 10.5),
+                        ),
+                        onPressed: () {
+                          responseController.text = isGu
+                              ? 'આ વિષયના મુશ્કેલ મુદ્દાઓ માટે અમે ઉપચારાત્મક (Remedial) વર્ગમાં ખાસ માર્ગદર્શન આપી રહ્યા છીએ.'
+                              : 'We have enrolled the student in focused remedial learning sessions to strengthen basic fundamentals.';
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: responseController,
+                    maxLines: 4,
+                    minLines: 2,
+                    decoration: InputDecoration(
+                      hintText: isGu
+                          ? 'વાલીને સત્તાવાર ઉત્તર અથવા માર્ગદર્શન લખો...'
+                          : 'Type your official response to the parent...',
+                      hintStyle: const TextStyle(fontSize: 12),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      contentPadding: const EdgeInsets.all(10),
+                    ),
+                    validator: (val) {
+                      if (val == null || val.trim().isEmpty) {
+                        return isGu ? 'કૃપા કરીને ઉત્તર લખો' : 'Please enter an answer';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(),
+              child: Text(isGu ? 'રદ કરો' : 'Cancel'),
+            ),
+            FilledButton.icon(
+              icon: const Icon(Icons.send_rounded, size: 14),
+              label: Text(isGu ? 'ઉત્તર મોકલો' : 'Send Answer'),
+              style: FilledButton.styleFrom(backgroundColor: Colors.purple.shade700),
+              onPressed: () async {
+                if (formKey.currentState?.validate() ?? false) {
+                  final text = responseController.text.trim();
+                  final reviewProv = Provider.of<ParentReviewProvider>(context, listen: false);
+                  await reviewProv.submitTeacherResponse(
+                    reviewId: review.id,
+                    responseText: text,
+                    teacherName: teacherName,
+                  );
+                  if (dialogCtx.mounted) {
+                    Navigator.of(dialogCtx).pop();
+                  }
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          isGu
+                              ? 'વાલીને ઉત્તર સફળતાપૂર્વક મોકલાયો!'
+                              : 'Response successfully sent to parent!',
+                        ),
+                        backgroundColor: Colors.green.shade800,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
