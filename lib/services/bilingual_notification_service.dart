@@ -83,7 +83,7 @@ Dear Parent, assessment result declared for $studentName (Class $className):
 Subject: $subjectName
 Marks: ${obtainedMarks.toStringAsFixed(0)}/${totalMarks.toStringAsFixed(0)} ($percent%)
 Grade: $grade$notesSectionEn
-View Full Report: https://learningsetu.gujarat.gov.in/r/${studentName.replaceAll(' ', '').toLowerCase()}
+View Full Report: https://edutrack.gujarat.gov.in/r/${studentName.replaceAll(' ', '').toLowerCase()}
 
 ---
 
@@ -91,7 +91,7 @@ View Full Report: https://learningsetu.gujarat.gov.in/r/${studentName.replaceAll
 વિષય: $subjectGu
 ગુણ: ${obtainedMarks.toStringAsFixed(0)}/${totalMarks.toStringAsFixed(0)} ($percent%)
 ગ્રેડ: $gradeGu$notesSectionGu
-વિગતવાર અહેવાલ: https://learningsetu.gujarat.gov.in/r/${studentName.replaceAll(' ', '').toLowerCase()}
+વિગતવાર અહેવાલ: https://edutrack.gujarat.gov.in/r/${studentName.replaceAll(' ', '').toLowerCase()}
 
 - $schoolName / $schoolGu
 - Teacher Contact / શિક્ષક સંપર્ક: +91 98796 67097''';
@@ -177,14 +177,14 @@ Please guide your child to practice this topic at home.
 Dear Parent, your child $studentName (Class $className) completed a quiz in $subjectName.
 Score: $score/$totalQuestions ($percent%)
 Status: $statusEn
-Practice Portal: https://learningsetu.gujarat.gov.in/practice
+Practice Portal: https://edutrack.gujarat.gov.in/practice
 
 ---
 
 પ્રિય વાલી, તમારા બાળક $studentName (ધોરણ $className) એ $subjectGu વિષયમાં ક્વિઝ પૂર્ણ કરી છે.
 સ્કોર: $score/$totalQuestions ($percent%)
 સ્થિતિ: $statusGu
-અભ્યાસ પોર્ટલ: https://learningsetu.gujarat.gov.in/practice
+અભ્યાસ પોર્ટલ: https://edutrack.gujarat.gov.in/practice
 
 - $schoolName / $schoolGu
 - Teacher Contact / શિક્ષક સંપર્ક: +91 98796 67097''';

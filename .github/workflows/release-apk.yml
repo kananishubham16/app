@@ -47,20 +47,20 @@ jobs:
       - name: Upload APK as Workflow Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: learning-setu-release-apk
+          name: edutrack-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
-          name: "Learning Setu Release ${{ github.ref_name }}"
+          name: "EduTrack Release ${{ github.ref_name }}"
           tag_name: ${{ github.ref_name != '' && github.ref_name || 'v1.0.0' }}
           files: build/app/outputs/flutter-apk/app-release.apk
           draft: false
           prerelease: false
           body: |
-            ### Learning Setu (લર્નિંગ સેતુ) Android APK Release
+            ### EduTrack Android APK Release
             
             Download and install the APK directly on any Android device.
             - **File**: `app-release.apk`

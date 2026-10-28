@@ -10,7 +10,7 @@ class AppLocalizationsGu extends AppLocalizations {
   AppLocalizationsGu([String locale = 'gu']) : super(locale);
 
   @override
-  String get appTitle => 'EduTrack (એજ્યુટ્રેક)';
+  String get appTitle => 'EduTrack';
 
   @override
   String get home => 'હોમ';
