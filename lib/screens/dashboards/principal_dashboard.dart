@@ -1,3 +1,4 @@
+import 'package:learning_setu/widgets/web_clones/principal_web_home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -98,6 +99,32 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
   // TAB 1: HOME TAB (School Overview)
   // ==========================================
   Widget _buildHomeTab() {
+    final schoolProvider = context.watch<SchoolProvider>();
+    final studentProvider = context.watch<StudentProvider>();
+    final remedialProvider = context.watch<RemedialProvider>();
+
+    if (!_initialized &&
+        (schoolProvider.isLoading || studentProvider.isLoading)) {
+      return const LoadingWidget(message: 'Loading school overview...');
+    }
+
+    final classes = schoolProvider.classes;
+    final allStudents = studentProvider.students;
+    final allRemedials = remedialProvider.remedials;
+    final subjects = schoolProvider.subjects;
+
+    return PrincipalWebHomeView(
+      classes: classes,
+      students: allStudents,
+      subjects: subjects,
+      remedials: allRemedials,
+      onAddStudent: _openAddStudentDialog,
+      onRefresh: _loadData,
+    );
+  }
+
+  // ignore: unused_element
+  Widget _buildLegacyHomeTab() {
     final schoolProvider = context.watch<SchoolProvider>();
     final studentProvider = context.watch<StudentProvider>();
     final remedialProvider = context.watch<RemedialProvider>();

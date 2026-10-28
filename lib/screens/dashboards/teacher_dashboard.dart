@@ -1,3 +1,4 @@
+import 'package:learning_setu/widgets/web_clones/teacher_web_home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -232,6 +233,36 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
   // TAB 1: HOME TAB
   // ==========================================
   Widget _buildHomeTab() {
+    final schoolProvider = context.watch<SchoolProvider>();
+    final studentProvider = context.watch<StudentProvider>();
+    final remedialProvider = context.watch<RemedialProvider>();
+    final assessmentProvider = context.watch<AssessmentProvider>();
+    final l10n = AppLocalizations.of(context);
+
+    if (!_initialized &&
+        (schoolProvider.isLoading || studentProvider.isLoading)) {
+      return LoadingWidget(
+        message: l10n?.loading ?? 'Loading teacher dashboard...',
+      );
+    }
+
+    final students = studentProvider.students;
+    final subjects = schoolProvider.subjects;
+    final pendingRemedials = remedialProvider.pendingRemedials;
+    final assessments = assessmentProvider.assessments;
+
+    return TeacherWebHomeView(
+      students: students,
+      subjects: subjects,
+      assessments: assessments,
+      pendingRemedials: pendingRemedials,
+      onStudentTap: (student) => _navigateToStudent(student),
+      onRefresh: _loadDashboardData,
+    );
+  }
+
+  // ignore: unused_element
+  Widget _buildLegacyHomeTab() {
     final schoolProvider = context.watch<SchoolProvider>();
     final studentProvider = context.watch<StudentProvider>();
     final remedialProvider = context.watch<RemedialProvider>();
