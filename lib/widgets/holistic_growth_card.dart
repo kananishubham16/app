@@ -623,11 +623,16 @@ class HolisticGrowthCard extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        String? selectedKey = CharacterBadge.availableTemplates.first['key'];
+        final Set<String> selectedKeys = {
+          CharacterBadge.availableTemplates.first['key'] ?? 'high_effort'
+        };
         final noteController = TextEditingController();
 
         return StatefulBuilder(
           builder: (modalCtx, setModalState) {
+            final allTemplates = CharacterBadge.availableTemplates;
+            final isAllSelected = selectedKeys.length == allTemplates.length;
+
             return Padding(
               padding: EdgeInsets.only(
                 left: 20,
@@ -655,34 +660,90 @@ class HolisticGrowthCard extends StatelessWidget {
                             ),
                           ),
                         ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: selectedKeys.isNotEmpty ? AppColors.primary : Colors.grey.shade400,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${selectedKeys.length} ${isGu ? 'પસંદ કરેલ' : 'selected'}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      isGu
-                          ? 'વિદ્યાર્થીના ચારિત્ર્ય અને પ્રયત્નને બિરદાવવા ૧ ક્લિકમાં બેજ આપો:'
-                          : 'Award instant positive recognition for character and daily effort:',
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            isGu
+                                ? 'વિદ્યાર્થીના ચારિત્ર્ય માટે બેજ પસંદ કરો (મલ્ટીપલ સિલેક્શન):'
+                                : 'Select one or more character badges:',
+                            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                          ),
+                        ),
+                        TextButton(
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          onPressed: () {
+                            setModalState(() {
+                              if (isAllSelected) {
+                                selectedKeys.clear();
+                              } else {
+                                selectedKeys.addAll(
+                                  allTemplates
+                                      .map((t) => t['key'] ?? '')
+                                      .where((k) => k.isNotEmpty),
+                                );
+                              }
+                            });
+                          },
+                          child: Text(
+                            isAllSelected
+                                ? (isGu ? 'બધા દૂર કરો' : 'Clear All')
+                                : (isGu ? 'બધા પસંદ કરો' : 'Select All'),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
 
-                    // Grid/List of badges
+                    // Multi-select badges wrap
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: CharacterBadge.availableTemplates.map((t) {
+                      children: allTemplates.map((t) {
                         final key = t['key'] ?? '';
-                        final isSelected = selectedKey == key;
+                        final isSelected = selectedKeys.contains(key);
                         final color = _getBadgeColor(key);
                         final bg = _getBadgeBg(key);
 
-                        return ChoiceChip(
+                        return FilterChip(
                           selected: isSelected,
-                          avatar: Icon(
-                            _getBadgeIcon(t['icon'] ?? ''),
-                            size: 16,
-                            color: isSelected ? Colors.white : color,
-                          ),
+                          showCheckmark: true,
+                          checkmarkColor: Colors.white,
+                          avatar: isSelected
+                              ? null
+                              : Icon(
+                                  _getBadgeIcon(t['icon'] ?? ''),
+                                  size: 16,
+                                  color: color,
+                                ),
                           label: Text(
                             isGu ? (t['titleGu'] ?? '') : (t['title'] ?? ''),
                             style: TextStyle(
@@ -697,11 +758,13 @@ class HolisticGrowthCard extends StatelessWidget {
                             color: isSelected ? color : color.withAlpha(60),
                           ),
                           onSelected: (val) {
-                            if (val) {
-                              setModalState(() {
-                                selectedKey = key;
-                              });
-                            }
+                            setModalState(() {
+                              if (val) {
+                                selectedKeys.add(key);
+                              } else {
+                                selectedKeys.remove(key);
+                              }
+                            });
                           },
                         );
                       }).toList(),
@@ -753,35 +816,37 @@ class HolisticGrowthCard extends StatelessWidget {
                             ),
                             icon: const Icon(Icons.star, size: 16, color: Colors.white),
                             label: Text(
-                              isGu ? 'બેજ એનાયત કરો' : 'Award Badge',
+                              isGu
+                                  ? (selectedKeys.length > 1 ? 'બેજ એનાયત કરો (${selectedKeys.length})' : 'બેજ એનાયત કરો')
+                                  : (selectedKeys.length > 1 ? 'Award Badges (${selectedKeys.length})' : 'Award Badge'),
                               style: const TextStyle(color: Colors.white),
                             ),
-                            onPressed: () async {
-                              if (selectedKey != null) {
-                                await prov?.awardBadge(
-                                  studentId: studentId,
-                                  badgeKey: selectedKey!,
-                                  teacherName: currentTeacher,
-                                  note: noteController.text.trim().isNotEmpty
-                                      ? noteController.text.trim()
-                                      : null,
-                                );
-                                if (modalCtx.mounted) {
-                                  Navigator.pop(modalCtx);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        isGu
-                                            ? 'સફળતાપૂર્વક બેજ એનાયત કરવામાં આવ્યો!'
-                                            : 'Badge successfully awarded!',
-                                      ),
-                                      backgroundColor: AppColors.primary,
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                }
-                              }
-                            },
+                            onPressed: selectedKeys.isEmpty
+                                ? null
+                                : () async {
+                                    await prov?.awardBadges(
+                                      studentId: studentId,
+                                      badgeKeys: selectedKeys.toList(),
+                                      teacherName: currentTeacher,
+                                      note: noteController.text.trim().isNotEmpty
+                                          ? noteController.text.trim()
+                                          : null,
+                                    );
+                                    if (modalCtx.mounted) {
+                                      Navigator.pop(modalCtx);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            isGu
+                                                ? '${selectedKeys.length} બેજ સફળતાપૂર્વક એનાયત કરવામાં આવ્યા!'
+                                                : '${selectedKeys.length} badge(s) successfully awarded!',
+                                          ),
+                                          backgroundColor: AppColors.primary,
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
+                                    }
+                                  },
                           ),
                         ),
                       ],

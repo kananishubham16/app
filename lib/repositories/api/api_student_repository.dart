@@ -66,7 +66,7 @@ class ApiStudentRepository implements StudentRepository {
     try {
       final res = await client.get('students/$studentId');
       if (res != null) {
-        final data = (res is Map && res['data'] is Map)
+        final data = res is Map && res['data'] != null
             ? (res['data'] as Map).cast<String, dynamic>()
             : (res as Map).cast<String, dynamic>();
         return StudentModel.fromJson(data);
@@ -87,5 +87,19 @@ class ApiStudentRepository implements StudentRepository {
       if (list.isNotEmpty) return list;
     } catch (_) {}
     return _mockFallback.searchStudents(query, classId: classId);
+  }
+
+  @override
+  Future<StudentModel> addStudent(StudentModel student) async {
+    try {
+      final res = await client.post('students', body: student.toJson());
+      if (res != null) {
+        final data = res is Map && res['data'] != null
+            ? (res['data'] as Map).cast<String, dynamic>()
+            : (res as Map).cast<String, dynamic>();
+        return StudentModel.fromJson(data);
+      }
+    } catch (_) {}
+    return _mockFallback.addStudent(student);
   }
 }

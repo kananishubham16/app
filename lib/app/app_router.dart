@@ -6,6 +6,7 @@ import 'package:learning_setu/screens/dashboards/principal_dashboard.dart';
 import 'package:learning_setu/screens/dashboards/brc_dashboard.dart';
 import 'package:learning_setu/screens/dashboards/parent_dashboard.dart';
 import 'package:learning_setu/screens/students/student_detail_screen.dart';
+import 'package:learning_setu/screens/students/students_list_screen.dart';
 import 'package:learning_setu/screens/subjects/subject_detail_screen.dart';
 import 'package:learning_setu/screens/subjects/subjects_screen.dart';
 import 'package:learning_setu/screens/results/results_screen.dart';
@@ -27,6 +28,7 @@ class AppRouter {
   static const String principalDashboard = '/principal-dashboard';
   static const String brcDashboard = '/brc-dashboard';
   static const String parentDashboard = '/parent-dashboard';
+  static const String students = '/students';
   static const String studentDetail = '/student-detail';
   static const String subjectDetail = '/subject-detail';
   static const String subjects = '/subjects';
@@ -68,6 +70,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const BrcDashboard());
       case parentDashboard:
         return MaterialPageRoute(builder: (_) => const ParentDashboard());
+      case students:
+        return MaterialPageRoute(builder: (_) => const StudentsListScreen());
       case studentDetail:
         final studentId = settings.arguments is String
             ? settings.arguments as String

@@ -188,59 +188,68 @@ class HolisticProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// 1-Tap Positive Shout-Out Character Badge Awarding
-  Future<void> awardBadge({
+  /// Multiple or Single Positive Shout-Out Character Badges Awarding
+  Future<void> awardBadges({
     required String studentId,
-    required String badgeKey,
+    required List<String> badgeKeys,
     required String teacherName,
     String? note,
   }) async {
+    if (badgeKeys.isEmpty) return;
     final existing = getEvaluationForStudent(studentId);
 
-    final template = CharacterBadge.availableTemplates.firstWhere(
-      (t) => t['key'] == badgeKey,
-      orElse: () => CharacterBadge.availableTemplates.first,
-    );
-
-    final newBadge = CharacterBadge(
-      id: 'badge_${DateTime.now().millisecondsSinceEpoch}',
-      badgeKey: template['key'] ?? 'high_effort',
-      title: template['title'] ?? 'High Effort',
-      titleGu: template['titleGu'] ?? 'પરિશ્રમી પ્રયાસ',
-      iconName: template['icon'] ?? 'star',
-      awardedBy: teacherName,
-      awardedAt: DateTime.now(),
-    );
-
-    // Boost corresponding trait scores slightly for positive reinforcement
     double updatedGrit = existing.practiceGrit;
     double updatedConsistency = existing.learningConsistency;
     double updatedCuriosity = existing.engagementCuriosity;
     double updatedTeamwork = existing.teamworkEmpathy;
     double updatedCoCurricular = existing.coCurricular;
 
-    switch (newBadge.badgeKey) {
-      case 'high_effort':
-        updatedGrit = (updatedGrit + 3.0).clamp(0.0, 100.0);
-        break;
-      case 'curious_mind':
-        updatedCuriosity = (updatedCuriosity + 4.0).clamp(0.0, 100.0);
-        break;
-      case 'team_player':
-        updatedTeamwork = (updatedTeamwork + 4.0).clamp(0.0, 100.0);
-        break;
-      case 'creative_thinker':
-        updatedCuriosity = (updatedCuriosity + 3.0).clamp(0.0, 100.0);
-        updatedCoCurricular = (updatedCoCurricular + 3.0).clamp(0.0, 100.0);
-        break;
-      case 'active_sport':
-        updatedCoCurricular = (updatedCoCurricular + 5.0).clamp(0.0, 100.0);
-        updatedConsistency = (updatedConsistency + 2.0).clamp(0.0, 100.0);
-        break;
+    final List<CharacterBadge> newBadges = [];
+    final now = DateTime.now();
+
+    for (int i = 0; i < badgeKeys.length; i++) {
+      final key = badgeKeys[i];
+      final template = CharacterBadge.availableTemplates.firstWhere(
+        (t) => t['key'] == key,
+        orElse: () => CharacterBadge.availableTemplates.first,
+      );
+
+      final newBadge = CharacterBadge(
+        id: 'badge_${now.millisecondsSinceEpoch}_$i',
+        badgeKey: template['key'] ?? 'high_effort',
+        title: template['title'] ?? 'High Effort',
+        titleGu: template['titleGu'] ?? 'પરિશ્રમી પ્રયાસ',
+        iconName: template['icon'] ?? 'star',
+        awardedBy: teacherName,
+        awardedAt: now.add(Duration(milliseconds: i * 10)),
+      );
+      newBadges.add(newBadge);
+
+      switch (newBadge.badgeKey) {
+        case 'high_effort':
+          updatedGrit = (updatedGrit + 3.0).clamp(0.0, 100.0);
+          break;
+        case 'curious_mind':
+          updatedCuriosity = (updatedCuriosity + 4.0).clamp(0.0, 100.0);
+          break;
+        case 'team_player':
+          updatedTeamwork = (updatedTeamwork + 4.0).clamp(0.0, 100.0);
+          break;
+        case 'creative_thinker':
+          updatedCuriosity = (updatedCuriosity + 3.0).clamp(0.0, 100.0);
+          updatedCoCurricular = (updatedCoCurricular + 3.0).clamp(0.0, 100.0);
+          break;
+        case 'active_sport':
+          updatedCoCurricular = (updatedCoCurricular + 5.0).clamp(0.0, 100.0);
+          updatedConsistency = (updatedConsistency + 2.0).clamp(0.0, 100.0);
+          break;
+      }
     }
 
-    final updatedBadges = List<CharacterBadge>.from(existing.badges)
-      ..insert(0, newBadge);
+    final updatedBadges = List<CharacterBadge>.from(existing.badges);
+    for (final b in newBadges) {
+      updatedBadges.insert(0, b);
+    }
 
     final updatedEval = existing.copyWith(
       practiceGrit: double.parse(updatedGrit.toStringAsFixed(1)),
@@ -256,6 +265,21 @@ class HolisticProvider with ChangeNotifier {
     _evaluations[studentId] = updatedEval;
     await _storageService.saveHolisticEvaluations(_evaluations.values.toList());
     notifyListeners();
+  }
+
+  /// 1-Tap Positive Shout-Out Character Badge Awarding
+  Future<void> awardBadge({
+    required String studentId,
+    required String badgeKey,
+    required String teacherName,
+    String? note,
+  }) async {
+    await awardBadges(
+      studentId: studentId,
+      badgeKeys: [badgeKey],
+      teacherName: teacherName,
+      note: note,
+    );
   }
 
   /// Reset demo evaluations

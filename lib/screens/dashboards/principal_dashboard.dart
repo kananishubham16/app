@@ -18,6 +18,8 @@ import 'package:learning_setu/widgets/empty_state_widget.dart';
 import 'package:learning_setu/widgets/percentage_bar.dart';
 import 'package:learning_setu/l10n/app_localizations.dart';
 import 'package:learning_setu/app/theme.dart';
+import 'package:learning_setu/widgets/add_student_dialog.dart';
+import 'package:learning_setu/app/app_router.dart';
 
 class PrincipalDashboard extends StatefulWidget {
   const PrincipalDashboard({super.key});
@@ -60,11 +62,32 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
     }
   }
 
+  void _openAddStudentDialog() async {
+    final user = context.read<AuthProvider>().currentUser;
+    final created = await AddStudentDialog.show(
+      context,
+      initialClassId: _selectedClassFilter,
+      schoolId: user?.schoolId,
+    );
+    if (created != null && mounted) {
+      await _loadData();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return DashboardShell(
       title: l10n?.principalDashboard ?? 'Principal Dashboard',
+      appBarActions: [
+        IconButton(
+          tooltip: Localizations.localeOf(context).languageCode == 'gu'
+              ? 'નવો વિદ્યાર્થી ઉમેરો'
+              : 'Add Student',
+          icon: const Icon(Icons.person_add_rounded),
+          onPressed: _openAddStudentDialog,
+        ),
+      ],
       homeTab: _buildHomeTab(),
       subjectsTab: _buildSubjectsTab(),
       performanceTab: _buildPerformanceTab(),
@@ -118,6 +141,55 @@ class _PrincipalDashboardState extends State<PrincipalDashboard> {
         children: [
           // Filter Row: Class and Date period
           _buildFilterBar(classes),
+          const SizedBox(height: 12),
+
+          // Principal Quick Actions: Add Student & View Students Directory
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0D9488),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 0,
+                  ),
+                  onPressed: _openAddStudentDialog,
+                  icon: const Icon(Icons.person_add_rounded, size: 18),
+                  label: Text(
+                    Localizations.localeOf(context).languageCode == 'gu'
+                        ? 'નવો વિદ્યાર્થી ઉમેરો'
+                        : 'Add Student',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF0F172A),
+                    side: const BorderSide(color: Color(0xFFCBD5E1)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () => Navigator.pushNamed(context, AppRouter.students),
+                  icon: const Icon(Icons.people_alt_outlined, size: 18),
+                  label: Text(
+                    Localizations.localeOf(context).languageCode == 'gu'
+                        ? 'વિદ્યાર્થીઓ જુઓ'
+                        : 'Students Directory',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
 
           // Overview Stats Grid

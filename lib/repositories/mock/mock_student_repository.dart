@@ -47,4 +47,10 @@ class MockStudentRepository implements StudentRepository {
       return matchesQuery;
     }).toList();
   }
+
+  @override
+  Future<StudentModel> addStudent(StudentModel student) async {
+    MockData.students.insert(0, student);
+    return student;
+  }
 }

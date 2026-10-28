@@ -161,6 +161,7 @@ class _DashboardShellState extends State<DashboardShell> {
     AppLocalizations? l10n,
   ) {
     final roleText = user != null ? user.getLocalizedRoleName(context) : '';
+    final isGu = Localizations.localeOf(context).languageCode == 'gu';
 
     return Drawer(
       child: ListView(
@@ -194,18 +195,26 @@ class _DashboardShellState extends State<DashboardShell> {
               Navigator.pushNamed(context, AppRouter.profile);
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.people_alt_outlined),
+            title: Text(isGu ? 'વિદ્યાર્થીઓ' : 'Students Directory'),
+            subtitle: Text(
+              isGu ? 'તમામ નોંધાયેલા વિદ્યાર્થીઓ' : 'All Enrolled Students & Roster',
+              style: const TextStyle(fontSize: 11),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, AppRouter.students);
+            },
+          ),
           if (user?.role == UserRole.brc)
             ListTile(
               leading: const Icon(Icons.apartment_rounded),
               title: Text(
-                Localizations.localeOf(context).languageCode == 'gu'
-                    ? 'શાળાઓ અને સંસ્થાઓ'
-                    : 'Schools & Institutions',
+                isGu ? 'શાળાઓ અને સંસ્થાઓ' : 'Schools & Institutions',
               ),
               subtitle: Text(
-                Localizations.localeOf(context).languageCode == 'gu'
-                    ? 'તમામ બ્લોક શાળાઓ'
-                    : 'All Block Schools',
+                isGu ? 'તમામ બ્લોક શાળાઓ' : 'All Block Schools',
                 style: const TextStyle(fontSize: 11),
               ),
               onTap: () {
@@ -293,12 +302,12 @@ class _DashboardShellState extends State<DashboardShell> {
           // Language Switch in Drawer
           Consumer<LocaleProvider>(
             builder: (context, localeProv, _) {
-              final isGu = localeProv.locale.languageCode == 'gu';
+              final isGuLang = localeProv.locale.languageCode == 'gu';
               return ListTile(
                 leading: const Icon(Icons.translate_rounded),
                 title: Text(l10n?.language ?? 'Language'),
                 trailing: Text(
-                  isGu ? 'ગુજરાતી' : 'English',
+                  isGuLang ? 'ગુજરાતી' : 'English',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 onTap: () {

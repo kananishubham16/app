@@ -132,6 +132,28 @@ void main() {
       expect(updated.teacherNotes, 'Superb grit in solving fractions worksheet!');
     });
 
+    test('Multiple selective badge awarding adds all badges and boosts scores', () async {
+      final initial = provider.getEvaluationForStudent('student_1');
+      final initialBadgeCount = initial.badges.length;
+      final initialCuriosity = initial.engagementCuriosity;
+      final initialTeamwork = initial.teamworkEmpathy;
+
+      await provider.awardBadges(
+        studentId: 'student_1',
+        badgeKeys: ['curious_mind', 'team_player'],
+        teacherName: 'Anita Sharma',
+        note: 'Exceptional group leadership and questions in science!',
+      );
+
+      final updated = provider.getEvaluationForStudent('student_1');
+      expect(updated.badges.length, initialBadgeCount + 2);
+      expect(updated.badges[0].badgeKey, 'team_player');
+      expect(updated.badges[1].badgeKey, 'curious_mind');
+      expect(updated.engagementCuriosity, greaterThan(initialCuriosity));
+      expect(updated.teamworkEmpathy, greaterThan(initialTeamwork));
+      expect(updated.teacherNotes, 'Exceptional group leadership and questions in science!');
+    });
+
     test('Auto-updates Practice Grit and Consistency from attendance/remedials', () async {
       await provider.autoUpdateMetrics(
         studentId: 'student_1',

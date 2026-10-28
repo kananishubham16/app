@@ -102,4 +102,23 @@ class StudentProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<StudentModel> addStudent(StudentModel student) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final created = await _studentRepo.addStudent(student);
+      _students.insert(0, created);
+      _isLoading = false;
+      notifyListeners();
+      return created;
+    } catch (e) {
+      _error = 'Failed to add student: $e';
+      _isLoading = false;
+      notifyListeners();
+      rethrow;
+    }
+  }
 }

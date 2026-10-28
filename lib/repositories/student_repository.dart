@@ -6,4 +6,5 @@ abstract class StudentRepository {
   Future<List<StudentModel>> getStudentsByIds(List<String> ids);
   Future<StudentModel?> getStudent(String studentId);
   Future<List<StudentModel>> searchStudents(String query, {String? classId});
+  Future<StudentModel> addStudent(StudentModel student);
 }

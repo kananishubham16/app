@@ -213,6 +213,15 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
 
     return DashboardShell(
       title: l10n?.teacherDashboard ?? 'Teacher Dashboard',
+      appBarActions: [
+        IconButton(
+          tooltip: Localizations.localeOf(context).languageCode == 'gu'
+              ? 'વિદ્યાર્થીઓ'
+              : 'Students Directory',
+          icon: const Icon(Icons.people_alt_outlined),
+          onPressed: () => Navigator.pushNamed(context, AppRouter.students),
+        ),
+      ],
       homeTab: _buildHomeTab(),
       subjectsTab: _buildSubjectsTab(),
       performanceTab: _buildPerformanceTab(),
