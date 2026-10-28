@@ -139,7 +139,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          lang == 'gu' ? 'એડ્યુટ્રેક' : (lang == 'hi' ? 'एडुट्रैक' : 'EduTrack'),
+                          'EduTrack',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 19,
@@ -299,7 +299,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             ? 'बहु-हितधारक शैक्षणिक विश्लेषण मंच'
             : 'Multi-Stakeholder Educational Intelligence Platform');
 
-    final heading = lang == 'gu' ? 'એડ્યુટ્રેક' : (lang == 'hi' ? 'एडुट्रैक' : 'EduTrack');
+    final heading = 'EduTrack';
 
     final subtitle = lang == 'gu'
         ? 'વિદ્યાર્થીઓની અધ્યયન ખામીઓની ઓળખ કરો, વર્ગખંડના પરિણામોનું નિરીક્ષણ કરો, સોંપેલ વર્ગોની સમીક્ષા કરો અને શિક્ષકો તથા વાલીઓ વચ્ચે પારદર્શક સંવાદ સાધો.'
@@ -929,7 +929,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  lang == 'gu' ? 'એડ્યુટ્રેક' : (lang == 'hi' ? 'एडुट्रैक' : 'EduTrack'),
+                  'EduTrack',
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 12.5,

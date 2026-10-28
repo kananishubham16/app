@@ -24,7 +24,7 @@ import 'package:learning_setu/services/storage_service.dart';
 
 import 'package:flutter/services.dart';
 
-/// Learning Setu - Smart Tracking and Remedial Action System
+/// EduTrack - Smart Tracking and Remedial Action System
 /// for Student Learning Gaps in Primary Schools.
 ///
 /// Problem ID: PS000060 | SFIC Hackathon 2026
@@ -64,10 +64,10 @@ void main() async {
     );
   } catch (_) {}
 
-  runApp(const LearningSetu());
+  runApp(const EduTrackApp());
 }
 
-class LearningSetu extends StatelessWidget {
+class EduTrackApp extends StatelessWidget {
   final AuthRepository? authRepo;
   final StudentRepository? studentRepo;
   final AssessmentRepository? assessmentRepo;
@@ -75,7 +75,7 @@ class LearningSetu extends StatelessWidget {
   final RemedialRepository? remedialRepo;
   final SchoolRepository? schoolRepo;
 
-  const LearningSetu({
+  const EduTrackApp({
     super.key,
     this.authRepo,
     this.studentRepo,
@@ -163,3 +163,6 @@ class LearningSetu extends StatelessWidget {
     );
   }
 }
+
+
+typedef LearningSetu = EduTrackApp;

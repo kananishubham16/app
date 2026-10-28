@@ -1,13 +1,13 @@
-# Learning Setu (લર્નિંગ સેતુ) 🌉
+# EduTrack 🎓
 > **Smart Tracking and Remedial Action System for Student Learning Gaps in Primary Schools**  
 > **SFIC Hackathon 2026** • **Problem ID: PS000060**
 
 ---
 
 ## 🌟 Executive Summary
-**Learning Setu** is an education-focused Dart & Flutter application engineered to diagnose early foundational learning gaps in primary school children, assign targeted classroom and home remedial actions, supervise mini-quizzes, and track student recovery over time.
+**EduTrack** is an education-focused Dart & Flutter application engineered to diagnose early foundational learning gaps in primary school children, assign targeted classroom and home remedial actions, supervise mini-quizzes, and track student recovery over time.
 
-Built with **Flutter Material 3**, **Provider state management**, and **Repository pattern architecture**, Learning Setu enables seamless local evaluation for hackathon juries and is ready for production backend integration.
+Built with **Flutter Material 3**, **Provider state management**, and **Repository pattern architecture**, EduTrack enables seamless local evaluation for hackathon juries and is ready for production backend integration.
 
 ---
 
@@ -36,7 +36,7 @@ The application includes full local authentication simulation with a **"Try Demo
 ### Quick Start
 ```bash
 # 1. Navigate to the project directory
-cd d:\hackathon\sfic\learning_setu
+cd d:\hackathon\sfic\edutrack
 
 # 2. Fetch project dependencies
 flutter pub get
